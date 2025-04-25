@@ -1,7 +1,9 @@
+# main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 import models
+from routes import users, projects, tasks, comments, memberships
 
 # Crear las tablas en la base de datos
 models.Base.metadata.create_all(bind=engine)
@@ -21,6 +23,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Incluir todos los routers
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
+app.include_router(comments.router, prefix="/api/comments", tags=["Comments"])
+app.include_router(memberships.router, prefix="/api/memberships", tags=["Memberships"])
 
 @app.get("/", tags=["Root"])
 async def read_root():

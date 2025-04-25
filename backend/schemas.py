@@ -1,5 +1,6 @@
-from dataclasses import Field
-from pydantic import BaseModel, EmailStr
+from ast import pattern
+from pydantic import Field
+from pydantic import BaseModel, EmailStr, validator
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -30,34 +31,81 @@ class MembershipRole(str, Enum):
 
 ### User Schemas ###
 # Schema para crear usuario (entrada)
-class UserCreate(BaseModel):
-    name: str = Field(..., min_length=2, max_length=50, regex=r"^[a-zA-Z0-9 ]*$")
-    email: EmailStr = Field(...)
-    role: UserRole = Field(default=UserRole.USER)
-    password: str = Field(..., min_length=8)
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+    MODERATOR = "moderator"
+
+class UserBase(BaseModel):
+    name: str = Field(
+        ..., 
+        min_length=2, 
+        max_length=50, 
+        pattern=r"^[a-zA-Z0-9 ]*$",
+        description="Nombre del usuario"
+    )
+    email: EmailStr = Field(..., description="Email del usuario")
+    role: UserRole = Field(default=UserRole.USER, description="Rol del usuario")
+
+class UserCreate(UserBase):
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=50,
+        description="Contraseña del usuario"
+    )
 
     @validator('password')
-    def password_strength(cls, value: str) -> str:
-        if len(value) < 8:
-            raise ValueError("La contraseña debe tener al menos 8 caracteres.")
+    def password_strength(cls, value):
         if not any(char.isdigit() for char in value):
-            raise ValueError("La contraseña debe contener al menos un número.")
+            raise ValueError("La contraseña debe contener al menos un número")
         if not any(char.isupper() for char in value):
-            raise ValueError("La contraseña debe contener al menos una letra mayúscula.")
+            raise ValueError("La contraseña debe contener al menos una mayúscula")
         if not any(char in "!@#$%^&*()_+-=[]{}|;:,.<>?" for char in value):
             raise ValueError("La contraseña debe contener al menos un carácter especial")
         return value
 
-# Schema para mostrar usuario (salida)
-class UserResponse(BaseModel):
+class UserUpdate(BaseModel):
+    name: Optional[str] = Field(
+        None, 
+        min_length=2, 
+        max_length=50, 
+        pattern=r"^[a-zA-Z0-9 ]*$",
+        description="Nombre del usuario"
+    )
+    email: Optional[EmailStr] = Field(None, description="Email del usuario")
+    password: Optional[str] = Field(
+        None,
+        min_length=8,
+        max_length=50,
+        description="Contraseña del usuario"
+    )
+    role: Optional[UserRole] = None
+
+    @validator('password')
+    def password_strength(cls, value):
+        if value is not None:
+            if not any(char.isdigit() for char in value):
+                raise ValueError("La contraseña debe contener al menos un número")
+            if not any(char.isupper() for char in value):
+                raise ValueError("La contraseña debe contener al menos una mayúscula")
+            if not any(char in "!@#$%^&*()_+-=[]{}|;:,.<>?" for char in value):
+                raise ValueError("La contraseña debe contener al menos un carácter especial")
+        return value
+
+class User(UserBase):
     user_id: int
-    name: str
-    email: EmailStr
-    role: UserRole
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True  
+
+class UserResponse(UserBase):
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 ### Project Schemas ###
 class ProjectBase(BaseModel):
@@ -79,7 +127,17 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class ProjectWithDetails(ProjectResponse):
+    owner: UserResponse
+    members: List[UserResponse]
+    tasks: List["TaskResponse"]
+    comments: List["CommentResponse"]
+    files: List["FileResponse"]
+
+    class Config:
+        from_attributes = True
 
 ### Task Schemas ###
 class TaskBase(BaseModel):
@@ -88,10 +146,12 @@ class TaskBase(BaseModel):
     status: TaskStatus = Field(default=TaskStatus.TODO)
     due_date: datetime = Field(...)
 
-    @validator("due_date")
+    @validator('due_date')
     def validate_due_date(cls, value):
-        if value < datetime.now():
-            raise ValueError("La fecha de vencimiento no puede ser en el pasado.")
+        # Asegurarse de que ambas fechas sean naive para la comparación
+        now = datetime.now()
+        if value.replace(tzinfo=None) < now:
+            raise ValueError("La fecha límite debe ser posterior a la fecha actual")
         return value
 
 class TaskCreate(TaskBase):
@@ -111,7 +171,7 @@ class TaskResponse(TaskBase):
     assigned_to: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 ### File Schemas ###
 class FileBase(BaseModel):
@@ -129,7 +189,7 @@ class FileResponse(FileBase):
     uploaded_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 ### Comment Schemas ###
 class CommentBase(BaseModel):
@@ -152,7 +212,21 @@ class CommentResponse(CommentBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class CommentUpdate(BaseModel):
+    content: Optional[str] = Field(
+        None,
+        min_length=1, 
+        max_length=1000, 
+        description="Contenido del comentario"
+    )
+
+    @validator('content')
+    def content_not_empty(cls, v):
+        if v is not None and v.strip() == "":
+            raise ValueError("El comentario no puede estar vacío")
+        return v.strip() if v else v
 
 ### MemberShip Schemas ###
 class MembershipBase(BaseModel):
@@ -160,32 +234,36 @@ class MembershipBase(BaseModel):
         default=MembershipRole.MEMBER,
         description="Rol del usuario en el proyecto"
     )
-    joined_at: datetime = Field(
-        default_factory=datetime.now,
-        description="Fecha de unión al proyecto"
-    )
     is_active: bool = Field(
         default=True,
         description="Estado de la membresía"
     )
 
-class MembershipRole(str, Enum):
-    OWNER = "owner"
-    MEMBER = "member"
-    VIEWER = "viewer"
-
-class MembershipBase(BaseModel):
-    role: MembershipRole = Field(default=MembershipRole.MEMBER, description="Rol del usuario en el proyecto")
-
 class MembershipCreate(MembershipBase):
-    user_id: int
-    project_id: int
+    user_id: int = Field(..., gt=0, description="ID del usuario")
+    project_id: int = Field(..., gt=0, description="ID del proyecto")
 
-class MembershipResponse(MembershipBase):
+class MembershipUpdate(BaseModel):
+    role: Optional[MembershipRole] = Field(
+        None,
+        description="Rol del usuario en el proyecto"
+    )
+    is_active: Optional[bool] = Field(
+        None,
+        description="Estado de la membresía"
+    )
+
+class Membership(MembershipBase):
     membership_id: int
     user_id: int
     project_id: int
     joined_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+# Referencias forward para evitar referencias circulares
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from . import TaskResponse, CommentResponse, FileResponse

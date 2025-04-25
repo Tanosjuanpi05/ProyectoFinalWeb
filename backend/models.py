@@ -44,6 +44,12 @@ class User(Base):
     comments = relationship("Comment", back_populates="user")
     files = relationship("File", back_populates="user")
     memberships = relationship("Membership", back_populates="user")
+    member_of_projects = relationship(
+        "Project",
+        secondary="memberships",
+        back_populates="members",
+        viewonly=True
+    )
 
 class Project(Base):
     __tablename__ = "projects"
@@ -61,6 +67,13 @@ class Project(Base):
     comments = relationship("Comment", back_populates="project", cascade="all, delete-orphan")
     files = relationship("File", back_populates="project", cascade="all, delete-orphan")
     memberships = relationship("Membership", back_populates="project", cascade="all, delete-orphan")
+    # Agregar esta relación para obtener los miembros a través de memberships
+    members = relationship(
+        "User",
+        secondary="memberships",
+        back_populates="member_of_projects",
+        viewonly=True
+    )
 
 class Task(Base):
     __tablename__ = "tasks"
