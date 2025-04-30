@@ -22,43 +22,60 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess(false);
+  // Register.jsx
+// Register.jsx
 
-    if (formData.password !== formData.confirmPassword) {
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setSuccess(false);
+
+  if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
-    }
+  }
 
-    try {
-      // Asegurarnos de que los datos coincidan exactamente con el formato esperado
+  try {
       const userData = {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
       };
-
-      // Agregar console.log para debugging
-      console.log('Datos a enviar:', userData);
       
       const response = await userService.createUser(userData);
-      console.log('Respuesta del servidor:', response);
-      
       setSuccess(true);
       setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        role: 'user'
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          role: 'user'
       });
-    } catch (error) {
-      console.error('Error completo:', error);
-      setError(error.response?.data?.detail || 'Error al registrar usuario');
-    }
+  } catch (error) {
+      if (error.response) {
+          // Manejo específico para errores de validación (422)
+          if (error.response.status === 422) {
+              const validationErrors = error.response.data.detail;
+              if (Array.isArray(validationErrors)) {
+                  // Si es un array de errores, mostrar el primer mensaje
+                  setError(validationErrors[0].msg);
+              } else if (typeof validationErrors === 'string') {
+                  // Si es un string directo
+                  setError(validationErrors);
+              } else {
+                  // Para otros formatos de error
+                  setError('Error de validación en el formulario');
+              }
+          } else {
+              setError(error.response.data.detail || 'Error en el registro');
+          }
+      } else if (error.request) {
+          setError('No se pudo conectar con el servidor');
+      } else {
+          setError('Error al procesar la solicitud');
+      }
+  }
 };
 
   return (
@@ -120,6 +137,7 @@ const Register = () => {
             >
               <option value="user">Usuario</option>
               <option value="admin">Administrador</option>
+              <option value="moderator">Moderador</option>
             </select>
           </div>
 

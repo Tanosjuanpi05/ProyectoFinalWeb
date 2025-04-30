@@ -1,6 +1,6 @@
 import axios from 'axios';	
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8000/api";
 
 const commentService = {
   // Crear un nuevo comentario
@@ -326,7 +326,7 @@ const membershipService = {
     // Crear un nuevo usuario
       createUser: async (userData) => {
        try {
-         const response = await axios.post(`${BASE_URL}/users`, userData);
+         const response = await axios.post(`${BASE_URL}/users/`, userData);
          return response.data;
        } catch (error) {
          throw error;
