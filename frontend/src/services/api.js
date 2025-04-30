@@ -324,34 +324,30 @@ const membershipService = {
 
   const userService = {
     // Crear un nuevo usuario
-    createUser: async (userData) => {
-      try {
-        const response = await axios.post(`${BASE_URL}/users/`, userData);
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      createUser: async (userData) => {
+       try {
+         const response = await axios.post(`${BASE_URL}/users`, userData);
+         return response.data;
+       } catch (error) {
+         throw error;
+       }
+      
     },
   
     // Obtener todos los usuarios
-    getUsers: async (params = {}) => {
+    getUsers: async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/users/`, {
-          params: {
-            skip: params.skip || 0,
-            limit: params.limit || 100
-          }
-        });
+        const response = await axios.get(`${BASE_URL}/users/`);
         return response.data;
       } catch (error) {
         throw error;
       }
     },
   
-    // Obtener un usuario específico
-    getUserById: async (userId) => {
+    // Obtener un usuario por ID
+    getUserById: async (id) => {
       try {
-        const response = await axios.get(`${BASE_URL}/users/${userId}`);
+        const response = await axios.get(`${BASE_URL}/users/${id}`);
         return response.data;
       } catch (error) {
         throw error;
@@ -359,9 +355,9 @@ const membershipService = {
     },
   
     // Actualizar un usuario
-    updateUser: async (userId, updateData) => {
+    updateUser: async (id, userData) => {
       try {
-        const response = await axios.put(`${BASE_URL}/users/${userId}`, updateData);
+        const response = await axios.put(`${BASE_URL}/users/${id}`, userData);
         return response.data;
       } catch (error) {
         throw error;
@@ -369,9 +365,9 @@ const membershipService = {
     },
   
     // Eliminar un usuario
-    deleteUser: async (userId) => {
+    deleteUser: async (id) => {
       try {
-        await axios.delete(`${BASE_URL}/users/${userId}`);
+        await axios.delete(`${BASE_URL}/users/${id}`);
         return true;
       } catch (error) {
         throw error;
@@ -379,6 +375,12 @@ const membershipService = {
     }
   };
 
-  export default membershipService; commentService; projectService; taskService; userService;
+  export {
+    membershipService,
+    commentService,
+    projectService,
+    taskService,
+    userService
+  };
 
 
