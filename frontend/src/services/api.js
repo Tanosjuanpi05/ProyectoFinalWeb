@@ -4,21 +4,41 @@ import axios from 'axios';
 const BASE_URL = "http://localhost:8000/api";
 
 // Añadir el servicio de autenticación
+// services/api.js
 const authService = {
   loginUser: async (email, password) => {
       try {
-          const formData = new FormData();
-          formData.append('username', email);    // Importante: debe ser 'username', no 'email'
+          // Cambiar a URLSearchParams en lugar de FormData
+          const formData = new URLSearchParams();
+          formData.append('username', email);
           formData.append('password', password);
 
           const response = await axios.post(`${BASE_URL}/auth/login`, formData, {
               headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded'
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json'
               }
           });
-          return response.data;
+
+          // Verificar la respuesta
+          if (response.data && response.data.access_token) {
+              return response.data;
+          } else {
+              throw new Error('Respuesta inválida del servidor');
+          }
       } catch (error) {
-          throw error;
+          // Mejorar el manejo de errores
+          if (error.response) {
+              // El servidor respondió con un código de error
+              const errorMessage = error.response.data?.detail || 'Error en la autenticación';
+              throw new Error(errorMessage);
+          } else if (error.request) {
+              // No se recibió respuesta del servidor
+              throw new Error('No se pudo conectar con el servidor');
+          } else {
+              // Error en la configuración de la petición
+              throw new Error('Error al procesar la solicitud');
+          }
       }
   }
 };

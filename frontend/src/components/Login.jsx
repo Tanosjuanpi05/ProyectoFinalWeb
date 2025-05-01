@@ -12,6 +12,7 @@ function Login() {
   const navigate = useNavigate();
 
   // Login.jsx
+// Login.jsx
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError('');
@@ -19,15 +20,30 @@ const handleSubmit = async (e) => {
   
   try {
       const data = await loginUser(email, password);
-      localStorage.setItem('token', data.token);
-      navigate('/home');
+      
+      // Guardar el token y la información del usuario
+      if (data && data.access_token) {
+          localStorage.setItem('token', data.access_token);
+          localStorage.setItem('userEmail', email); // Opcional: guardar email del usuario
+          
+          // Verificar que el token se guardó correctamente
+          const savedToken = localStorage.getItem('token');
+          if (!savedToken) {
+              throw new Error('Error al guardar la sesión');
+          }
+          
+          navigate('/home');
+      } else {
+          throw new Error('No se recibió el token de acceso');
+      }
       
   } catch (err) {
       if (err.response) {
-          // Error de respuesta del servidor
           switch (err.response.status) {
               case 401:
                   setError('Email o contraseña incorrectos');
+                  // Limpiar cualquier token anterior
+                  localStorage.removeItem('token');
                   break;
               case 422:
                   setError('Formato de email o contraseña inválido');
@@ -39,13 +55,14 @@ const handleSubmit = async (e) => {
                   setError('Error al iniciar sesión. Por favor, intente nuevamente');
           }
       } else if (err.request) {
-          // Error de conexión
           setError('No se pudo conectar con el servidor. Verifique su conexión a internet');
       } else {
-          // Otros errores
-          setError('Ocurrió un error inesperado. Por favor, intente nuevamente');
+          setError(err.message || 'Ocurrió un error inesperado');
       }
-      console.error('Error detallado:', err);
+      console.error('Error completo:', err);
+      
+      // Limpiar el localStorage en caso de error
+      localStorage.removeItem('token');
   } finally {
       setLoading(false);
   }

@@ -1,9 +1,11 @@
 // src/components/Home.jsx
+// src/components/Home.jsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';  // Añadir esta línea
 import { projectService, taskService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import CreateProjectForm from './CreateProjectForm';
-import CreateTaskForm from './CreateTaskForm'; // Añadida esta importación
+import CreateTaskForm from './CreateTaskForm';
 import './Home.css';
 import NavBar from './NavBar';
 
@@ -16,9 +18,34 @@ const Home = () => {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false); // Nuevo estado
 
+  // Home.jsx
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    const token = localStorage.getItem('token');
+    if (!token) {
+        navigate('/login');
+        return;
+    }
+
+    const fetchData = async () => {
+        try {
+            // Usar el token en las peticiones
+            const response = await axios.get('/api/data', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            // Procesar datos...
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                // Token inválido o expirado
+                localStorage.removeItem('token');
+                navigate('/login');
+            }
+        }
+    };
+
+  fetchData();
+}, [navigate]);
 
   const loadDashboardData = async () => {
     try {
