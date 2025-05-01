@@ -1,6 +1,23 @@
+
 import axios from 'axios';	
 
 const BASE_URL = "http://localhost:8000/api";
+
+// Añadir el servicio de autenticación
+const authService = {
+  // Función para iniciar sesión
+  loginUser: async (email, password) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/login`, { email, password });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new Error(error.response.data.message || 'Error al iniciar sesión');
+      }
+      throw new Error('Error de conexión con el servidor');
+    }
+  }
+};
 
 const commentService = {
   // Crear un nuevo comentario
@@ -376,6 +393,7 @@ const membershipService = {
   };
 
   export {
+    authService,
     membershipService,
     commentService,
     projectService,
@@ -383,4 +401,5 @@ const membershipService = {
     userService
   };
 
-
+// Exportar la función loginUser directamente para facilitar su uso
+export const { loginUser } = authService;
