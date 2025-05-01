@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Register from './components/Register';
+import Home from './components/Home';
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
           
           {/* Opcional: redirige cualquier otra ruta a la página principal */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
+          <Route path="/home" element={<Home />} />
         </Routes>
       </div>
     </Router>

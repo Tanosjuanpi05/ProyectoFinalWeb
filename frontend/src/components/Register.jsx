@@ -1,16 +1,20 @@
 // src/components/Register.jsx
 import React, { useState } from 'react';
 import { userService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import './Register.css';
 
 const Register = () => {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user' // Valor por defecto
+    role: 'user'
   });
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -22,61 +26,42 @@ const Register = () => {
     }));
   };
 
-  // Register.jsx
-// Register.jsx
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setSuccess(false);
-
-  if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
-  }
+    }
 
-  try {
+    try {
       const userData = {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
       };
       
       const response = await userService.createUser(userData);
       setSuccess(true);
       setFormData({
-          name: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          role: 'user'
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: 'user'
       });
-  } catch (error) {
-      if (error.response) {
-          // Manejo específico para errores de validación (422)
-          if (error.response.status === 422) {
-              const validationErrors = error.response.data.detail;
-              if (Array.isArray(validationErrors)) {
-                  // Si es un array de errores, mostrar el primer mensaje
-                  setError(validationErrors[0].msg);
-              } else if (typeof validationErrors === 'string') {
-                  // Si es un string directo
-                  setError(validationErrors);
-              } else {
-                  // Para otros formatos de error
-                  setError('Error de validación en el formulario');
-              }
-          } else {
-              setError(error.response.data.detail || 'Error en el registro');
-          }
-      } else if (error.request) {
-          setError('No se pudo conectar con el servidor');
-      } else {
-          setError('Error al procesar la solicitud');
-      }
-  }
-};
+
+      setTimeout(() => {
+        navigate('/home');
+      }, 2000);
+
+    } catch (error) {
+      setError(error.response?.data?.detail || 'Error al registrar usuario');
+    }
+  };
 
   return (
     <div className="register-container">
@@ -137,7 +122,6 @@ const handleSubmit = async (e) => {
             >
               <option value="user">Usuario</option>
               <option value="admin">Administrador</option>
-              <option value="moderator">Moderador</option>
             </select>
           </div>
 
