@@ -1,5 +1,6 @@
 // src/components/Register.jsx
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { userService } from '../services/api';
 import './Register.css';
 
@@ -171,6 +172,9 @@ const handleSubmit = async (e) => {
             Registrarse
           </button>
         </form>
+        <p className="login-link">
+                ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
+            </p>
       </div>
     </div>
   );

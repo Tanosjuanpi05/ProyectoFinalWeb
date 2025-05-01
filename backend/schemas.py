@@ -29,6 +29,14 @@ class MembershipRole(str, Enum):
     VIEWER = "viewer"
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: str | None = None
+    role: str | None = None
+
 ### User Schemas ###
 # Schema para crear usuario (entrada)
 class UserRole(str, Enum):

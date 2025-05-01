@@ -5,17 +5,21 @@ const BASE_URL = "http://localhost:8000/api";
 
 // Añadir el servicio de autenticación
 const authService = {
-  // Función para iniciar sesión
   loginUser: async (email, password) => {
-    try {
-      const response = await axios.post(`${BASE_URL}/login`, { email, password });
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new Error(error.response.data.message || 'Error al iniciar sesión');
+      try {
+          const formData = new FormData();
+          formData.append('username', email);    // Importante: debe ser 'username', no 'email'
+          formData.append('password', password);
+
+          const response = await axios.post(`${BASE_URL}/auth/login`, formData, {
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+              }
+          });
+          return response.data;
+      } catch (error) {
+          throw error;
       }
-      throw new Error('Error de conexión con el servidor');
-    }
   }
 };
 
