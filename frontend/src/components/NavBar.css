@@ -9,27 +9,51 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-  }
-  
-  .navbar-brand {
+}
+
+.navbar-brand {
     display: flex;
     align-items: center;
-  }
-  
-  .navbar-brand h1 {
+}
+
+.navbar-title {
     margin: 0;
-    color: #2d3748;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.datetime-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.date {
+    color: #4b5563;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.time {
+    color: #2563eb;
+    font-size: 1.1rem;
     font-weight: 600;
-  }
-  
-  .navbar-menu {
+    font-family: 'Courier New', monospace;
+}
+
+.navbar-menu {
     display: flex;
     align-items: center;
     gap: 1rem;
-  }
-  
-  .logout-button {
+}
+
+.logout-button {
     padding: 0.5rem 1rem;
     background-color: #f56565;
     color: white;
@@ -38,23 +62,48 @@
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 500;
-  }
-  
-  .logout-button:hover {
+}
+
+.logout-button:hover {
     background-color: #e53e3e;
     transform: translateY(-1px);
-  }
-  
-  .logout-button:active {
+}
+
+.logout-button:active {
     transform: translateY(1px);
-  }
-  
-  @media (max-width: 640px) {
+}
+
+@media (max-width: 768px) {
     .navbar {
-      padding: 1rem;
+        padding: 1rem;
+        flex-direction: column;
+        gap: 10px;
     }
-  
-    .navbar-brand h1 {
-      font-size: 1.25rem;
+
+    .navbar-title {
+        font-size: 1.4rem;
+        text-align: center;
     }
-  }
+
+    .datetime-display {
+        align-items: center;
+    }
+
+    .date, .time {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .navbar {
+        padding: 1rem;
+    }
+
+    .navbar-title {
+        font-size: 1.2rem;
+    }
+
+    .datetime-display {
+        font-size: 0.75rem;
+    }
+}
