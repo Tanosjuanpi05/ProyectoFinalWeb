@@ -140,31 +140,77 @@ const handleDeleteTask = async (taskId) => {
   }
 };
 
-const handleEditTask = async (taskId, updatedTaskData) => {
-  try {
-    const response = await taskService.updateTask(taskId, updatedTaskData);
-    // Si la edición es exitosa, actualizamos el estado de la tarea
-    if (response) {
-      setTasks(prevTasks => prevTasks.map(task =>
-        task.id === taskId ? { ...task, ...updatedTaskData } : task
-      ));
-    }
-  } catch (error) {
-    console.error('Error al editar la tarea:', error);
-    setError('No se pudo editar la tarea.');
+const handleEditTask = (taskId) => {
+  // Encuentra la tarea usando task_id
+  const task = tasks.find((t) => t.task_id === taskId);
+  if (!task) {
+    console.error('Tarea no encontrada');
+    return;
   }
+  
+  setEditTask(taskId);
+  setEditedTaskData({
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    due_date: task.due_date.split('T')[0], // Formatear la fecha para el input date
+    assigned_to: task.assigned_to || ''
+  });
 };
 
 const handleTaskEditSubmit = async (e) => {
   e.preventDefault();
-  if (editTask) {
-    await handleEditTask(editTask, editedTaskData);
+  
+  try {
+    if (!editTask || !editedTaskData) {
+      throw new Error('Datos de edición inválidos');
+    }
+
+    // Validar los campos requeridos
+    if (!editedTaskData.title || !editedTaskData.description || 
+        !editedTaskData.status || !editedTaskData.due_date) {
+      setError('Todos los campos son requeridos');
+      return;
+    }
+
+    // Llamar al servicio de actualización
+    await taskService.updateTask(editTask, editedTaskData);
+
+    // Actualizar el estado local
+    setTasks(prevTasks => prevTasks.map(task =>
+      task.task_id === editTask 
+        ? { ...task, ...editedTaskData }
+        : task
+    ));
+
+    // Limpiar el estado de edición y errores
     setEditTask(null);
+    setEditedTaskData({
+      title: '',
+      description: '',
+      status: '',
+      due_date: '',
+      assigned_to: ''
+    });
+    setError('');
+    
+    // Opcional: Recargar los datos
+    await loadDashboardData();
+
+  } catch (error) {
+    console.error('Error al editar la tarea:', error);
+    setError('Error al actualizar la tarea: ' + error.message);
   }
 };
 
 const handleEditProject = (projectId) => {
+  // Encuentra el proyecto usando project_id
   const project = projects.find((p) => p.project_id === projectId);
+  if (!project) {
+    console.error('Proyecto no encontrado');
+    return;
+  }
+  
   setEditProject(projectId);
   setEditedProjectData({
     title: project.title,
@@ -175,28 +221,44 @@ const handleEditProject = (projectId) => {
 
 // Función para enviar el formulario de edición de proyecto
 const handleProjectEditSubmit = async (e) => {
-  e.preventDefault();  // Evitar que el formulario se recargue
-
-  const updatedProjectData = {
-    title: editedProjectData.title,
-    description: editedProjectData.description,
-    status: editedProjectData.status,
-  };
-
+  e.preventDefault();
+  
   try {
-    // Llama al servicio de la API para actualizar el proyecto en el backend
-    await projectService.updateProject(editProject, updatedProjectData);
+    if (!editProject || !editedProjectData) {
+      throw new Error('Datos de edición inválidos');
+    }
 
-    // Actualizar el estado de los proyectos después de editar uno
-    const updatedProjects = projects.map((project) => 
-      project.project_id === editProject ? { ...project, ...updatedProjectData } : project
-    );
-    setProjects(updatedProjects);
+    // Validar los campos requeridos
+    if (!editedProjectData.title || !editedProjectData.description || !editedProjectData.status) {
+      setError('Todos los campos son requeridos');
+      return;
+    }
 
-    // Limpiar el estado de edición
+    // Llamar al servicio de actualización
+    await projectService.updateProject(editProject, editedProjectData);
+
+    // Actualizar el estado local
+    setProjects(prevProjects => prevProjects.map(project =>
+      project.project_id === editProject 
+        ? { ...project, ...editedProjectData }
+        : project
+    ));
+
+    // Limpiar el estado de edición y errores
     setEditProject(null);
+    setEditedProjectData({
+      title: '',
+      description: '',
+      status: ''
+    });
+    setError('');
+    
+    // Opcional: Recargar los datos
+    await loadDashboardData();
+
   } catch (error) {
-    console.error('Error al editar el proyecto', error);
+    console.error('Error al editar el proyecto:', error);
+    setError('Error al actualizar el proyecto: ' + error.message);
   }
 };
 
@@ -327,8 +389,12 @@ const handleProjectEditSubmit = async (e) => {
                           <span>Proyecto: {task.project_title || 'Sin proyecto'}</span>
                         </div>
                         <div className="task-actions">
-                          <button onClick={() => handleEditTask(task.task_id)}>Editar</button>
-                          <button onClick={() => handleDeleteTask(task.task_id)}>Eliminar</button>
+                          <button onClick={() => handleEditTask(task.task_id)}>
+                            Editar
+                          </button>
+                          <button onClick={() => handleDeleteTask(task.task_id)}>
+                            Eliminar
+                          </button>
                         </div>
                         {editTask && (
                           <div className="edit-task-form">
@@ -347,28 +413,28 @@ const handleProjectEditSubmit = async (e) => {
                                 placeholder="Descripción"
                                 required
                               />
-                              <input
-                                type="text"
+                              <select
                                 value={editedTaskData.status}
                                 onChange={(e) => setEditedTaskData({ ...editedTaskData, status: e.target.value })}
-                                placeholder="Estado"
                                 required
-                              />
+                              >
+                                <option value="">Seleccione un estado</option>
+                                <option value="todo">Por hacer</option>
+                                <option value="in_progress">En progreso</option>
+                                <option value="review">En revisión</option>
+                                <option value="done">Completado</option>
+                              </select>
+
                               <input
                                 type="date"
                                 value={editedTaskData.due_date}
                                 onChange={(e) => setEditedTaskData({ ...editedTaskData, due_date: e.target.value })}
                                 required
                               />
-                              <input
-                                type="number"
-                                value={editedTaskData.assigned_to}
-                                onChange={(e) => setEditedTaskData({ ...editedTaskData, assigned_to: e.target.value })}
-                                placeholder="Asignado a (ID)"
-                                required
-                              />
                               <button type="submit">Guardar cambios</button>
-                              <button type="button" onClick={() => setEditTask(null)}>Cancelar</button>
+                              <button type="button" onClick={() => setEditTask(null)}>
+                                Cancelar
+                              </button>
                             </form>
                           </div>
                         )}

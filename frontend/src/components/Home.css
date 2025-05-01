@@ -463,3 +463,164 @@
   align-items: flex-start;
   margin-bottom: 2rem;
 }
+/* Estilos para los formularios de edición */
+.edit-task-form,
+.edit-project-form {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: 15px;
+  border: 1px solid #e2e8f0;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.edit-task-form h3,
+.edit-project-form h3 {
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #4299e1;
+  padding-bottom: 8px;
+}
+
+.edit-task-form form,
+.edit-project-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.edit-task-form input,
+.edit-task-form textarea,
+.edit-task-form select,
+.edit-project-form input,
+.edit-project-form textarea,
+.edit-project-form select {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.edit-task-form input:focus,
+.edit-task-form textarea:focus,
+.edit-task-form select:focus,
+.edit-project-form input:focus,
+.edit-project-form textarea:focus,
+.edit-project-form select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.edit-task-form textarea,
+.edit-project-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Estilos para los botones de acción */
+.task-actions,
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.task-actions button,
+.card-actions button,
+.edit-task-form button,
+.edit-project-form button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+/* Botón Editar */
+.task-actions button:first-child,
+.card-actions button:first-child {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  color: white;
+}
+
+.task-actions button:first-child:hover,
+.card-actions button:first-child:hover {
+  background: linear-gradient(135deg, #3182ce, #2c5282);
+  transform: translateY(-1px);
+}
+
+/* Botón Eliminar */
+.task-actions button:last-child,
+.card-actions button:last-child {
+  background: linear-gradient(135deg, #f56565, #c53030);
+  color: white;
+}
+
+.task-actions button:last-child:hover,
+.card-actions button:last-child:hover {
+  background: linear-gradient(135deg, #c53030, #9b2c2c);
+  transform: translateY(-1px);
+}
+
+/* Botones del formulario */
+.edit-task-form button[type="submit"],
+.edit-project-form button[type="submit"] {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+}
+
+.edit-task-form button[type="submit"]:hover,
+.edit-project-form button[type="submit"]:hover {
+  background: linear-gradient(135deg, #38a169, #2f855a);
+  transform: translateY(-1px);
+}
+
+.edit-task-form button[type="button"],
+.edit-project-form button[type="button"] {
+  background: linear-gradient(135deg, #a0aec0, #718096);
+  color: white;
+}
+
+.edit-task-form button[type="button"]:hover,
+.edit-project-form button[type="button"]:hover {
+  background: linear-gradient(135deg, #718096, #4a5568);
+  transform: translateY(-1px);
+}
+
+/* Estados de las tareas */
+.status.todo {
+  background: linear-gradient(135deg, #fbd38d, #ed8936);
+  color: #744210;
+}
+
+.status.in_progress {
+  background: linear-gradient(135deg, #90cdf4, #4299e1);
+  color: #2a4365;
+}
+
+.status.review {
+  background: linear-gradient(135deg, #d6bcfa, #9f7aea);
+  color: #44337a;
+}
+
+.status.done {
+  background: linear-gradient(135deg, #9ae6b4, #48bb78);
+  color: #22543d;
+}

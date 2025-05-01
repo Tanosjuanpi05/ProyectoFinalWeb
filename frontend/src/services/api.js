@@ -255,13 +255,23 @@ const membershipService = {
     // Actualizar un proyecto
     updateProject: async (projectId, updateData) => {
       try {
-        const response = await axios.put(`${BASE_URL}/projects/${projectId}`, updateData);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No hay token de autenticación');
+        }
+    
+        const response = await axios.put(`${BASE_URL}/projects/${projectId}`, updateData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         return response.data;
       } catch (error) {
+        console.error('Error al actualizar proyecto:', error);
         throw error;
       }
     },
-  
     // Eliminar un proyecto
     deleteProject: async (projectId) => {
       try {
@@ -361,14 +371,26 @@ const membershipService = {
     },
   
     // Actualizar una tarea
-    updateTask: async (taskId, updateData) => {
-      try {
-        const response = await axios.put(`${BASE_URL}/tasks/${taskId}`, updateData);
-        return response.data;
-      } catch (error) {
-        throw error;
+// En taskService, actualiza la función updateTask
+updateTask: async (taskId, updateData) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No hay token de autenticación');
+    }
+
+    const response = await axios.put(`${BASE_URL}/tasks/${taskId}`, updateData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-    },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar tarea:', error);
+    throw error;
+  }
+},
   
     // Eliminar una tarea
     deleteTask: async (taskId) => {
