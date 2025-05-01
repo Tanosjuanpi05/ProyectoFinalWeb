@@ -11,27 +11,45 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    try {
-      // Utilizamos el servicio de API en lugar de fetch directo
+  // Login.jsx
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+  
+  try {
       const data = await loginUser(email, password);
-      
-      // Guardar token en localStorage o en un contexto
       localStorage.setItem('token', data.token);
-      
-      // Redirigir al usuario a la página principal
       navigate('/home');
       
-    } catch (err) {
-      setError(err.message || 'Ocurrió un error al iniciar sesión');
-    } finally {
+  } catch (err) {
+      if (err.response) {
+          // Error de respuesta del servidor
+          switch (err.response.status) {
+              case 401:
+                  setError('Email o contraseña incorrectos');
+                  break;
+              case 422:
+                  setError('Formato de email o contraseña inválido');
+                  break;
+              case 500:
+                  setError('Error en el servidor. Por favor, intente más tarde');
+                  break;
+              default:
+                  setError('Error al iniciar sesión. Por favor, intente nuevamente');
+          }
+      } else if (err.request) {
+          // Error de conexión
+          setError('No se pudo conectar con el servidor. Verifique su conexión a internet');
+      } else {
+          // Otros errores
+          setError('Ocurrió un error inesperado. Por favor, intente nuevamente');
+      }
+      console.error('Error detallado:', err);
+  } finally {
       setLoading(false);
-    }
-  };
+  }
+};
 
   return (
     <div className="login-container">
