@@ -169,26 +169,22 @@ const membershipService = {
   };
 
   const projectService = {
-    // Crear un nuevo proyecto
     createProject: async (projectData) => {
       try {
-        const response = await axios.post(`${BASE_URL}/projects/`, projectData);
+        console.log('Datos enviados al servidor:', projectData); // Para debugging
+        const response = await axios.post(`${BASE_URL}/projects`, projectData);
+        console.log('Respuesta del servidor:', response.data); // Para debugging
         return response.data;
       } catch (error) {
+        console.error('Error en createProject:', error);
         throw error;
       }
     },
   
     // Obtener todos los proyectos con filtros opcionales
-    getProjects: async (params = {}) => {
+    getProjects: async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/projects/`, {
-          params: {
-            skip: params.skip,
-            limit: params.limit,
-            status: params.status
-          }
-        });
+        const response = await axios.get(`${BASE_URL}/projects`);
         return response.data;
       } catch (error) {
         throw error;
