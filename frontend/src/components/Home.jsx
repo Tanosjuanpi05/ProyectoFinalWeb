@@ -16,6 +16,20 @@ const Home = () => {
     id: localStorage.getItem('userId') || ''
   });
 
+  const [editProject, setEditProject] = useState(null); // Estado para el proyecto que estamos editando
+  const [editedProjectData, setEditedProjectData] = useState({
+    title: '',
+    description: '',
+    status: ''
+  });
+  const [editTask, setEditTask] = useState(null); // Estado para la tarea que estamos editando
+  const [editedTaskData, setEditedTaskData] = useState({
+    title: '',
+    description: '',
+    status: '',
+    due_date: '',
+    assigned_to: ''
+  });
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +39,7 @@ const Home = () => {
   const [stats, setStats] = useState({
     pendingTasks: 0,
     completedTasks: 0
+    
   });
 
   useEffect(() => {
@@ -100,6 +115,92 @@ const Home = () => {
     loadDashboardData();
   };
 
+const handleDeleteProject = async (projectId) => {
+  try {
+    const success = await projectService.deleteProject(projectId);
+    if (success) {
+      setProjects(prevProjects => prevProjects.filter(project => project.id !== projectId));
+    }
+  } catch (error) {
+    console.error('Error al eliminar el proyecto:', error);
+    setError('No se pudo eliminar el proyecto.');
+  }
+};
+
+
+const handleDeleteTask = async (taskId) => {
+  try {
+    const success = await taskService.deleteTask(taskId);
+    if (success) {
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    }
+  } catch (error) {
+    console.error('Error al eliminar la tarea:', error);
+    setError('No se pudo eliminar la tarea.');
+  }
+};
+
+const handleEditTask = async (taskId, updatedTaskData) => {
+  try {
+    const response = await taskService.updateTask(taskId, updatedTaskData);
+    // Si la edición es exitosa, actualizamos el estado de la tarea
+    if (response) {
+      setTasks(prevTasks => prevTasks.map(task =>
+        task.id === taskId ? { ...task, ...updatedTaskData } : task
+      ));
+    }
+  } catch (error) {
+    console.error('Error al editar la tarea:', error);
+    setError('No se pudo editar la tarea.');
+  }
+};
+
+const handleTaskEditSubmit = async (e) => {
+  e.preventDefault();
+  if (editTask) {
+    await handleEditTask(editTask, editedTaskData);
+    setEditTask(null);
+  }
+};
+
+const handleEditProject = (projectId) => {
+  const project = projects.find((p) => p.project_id === projectId);
+  setEditProject(projectId);
+  setEditedProjectData({
+    title: project.title,
+    description: project.description,
+    status: project.status,
+  });
+};
+
+// Función para enviar el formulario de edición de proyecto
+const handleProjectEditSubmit = async (e) => {
+  e.preventDefault();  // Evitar que el formulario se recargue
+
+  const updatedProjectData = {
+    title: editedProjectData.title,
+    description: editedProjectData.description,
+    status: editedProjectData.status,
+  };
+
+  try {
+    // Llama al servicio de la API para actualizar el proyecto en el backend
+    await projectService.updateProject(editProject, updatedProjectData);
+
+    // Actualizar el estado de los proyectos después de editar uno
+    const updatedProjects = projects.map((project) => 
+      project.project_id === editProject ? { ...project, ...updatedProjectData } : project
+    );
+    setProjects(updatedProjects);
+
+    // Limpiar el estado de edición
+    setEditProject(null);
+  } catch (error) {
+    console.error('Error al editar el proyecto', error);
+  }
+};
+
+
   return (
     <div className="home-page">
       <NavBar />
@@ -169,7 +270,41 @@ const Home = () => {
                         <span>Miembros: {project.members?.length || 0}</span>
                         <span>Tareas: {project.tasks?.length || 0}</span>
                       </div>
+                      <div className="card-actions">
+                        <button onClick={() => handleEditProject(project.project_id)}>Editar</button>
+                        <button onClick={() => handleDeleteProject(project.project_id)}>Eliminar</button>
+                      </div>
+                      {editProject && (
+                          <div className="edit-project-form">
+                            <h3>Editar Proyecto</h3>
+                            <form onSubmit={handleProjectEditSubmit}>
+                              <input
+                                type="text"
+                                value={editedProjectData.title}
+                                onChange={(e) => setEditedProjectData({ ...editedProjectData, title: e.target.value })}
+                                placeholder="Título"
+                                required
+                              />
+                              <textarea
+                                value={editedProjectData.description}
+                                onChange={(e) => setEditedProjectData({ ...editedProjectData, description: e.target.value })}
+                                placeholder="Descripción"
+                                required
+                              />
+                              <input
+                                type="text"
+                                value={editedProjectData.status}
+                                onChange={(e) => setEditedProjectData({ ...editedProjectData, status: e.target.value })}
+                                placeholder="Estado"
+                                required
+                              />
+                              <button type="submit">Guardar cambios</button>
+                              <button type="button" onClick={() => setEditProject(null)}>Cancelar</button>
+                            </form>
+                          </div>
+                        )}  
                     </div>
+                    
                   ))}
                 </div>
               </section>
@@ -191,8 +326,56 @@ const Home = () => {
                           <span>Vence: {new Date(task.due_date).toLocaleDateString()}</span>
                           <span>Proyecto: {task.project_title || 'Sin proyecto'}</span>
                         </div>
+                        <div className="task-actions">
+                          <button onClick={() => handleEditTask(task.task_id)}>Editar</button>
+                          <button onClick={() => handleDeleteTask(task.task_id)}>Eliminar</button>
+                        </div>
+                        {editTask && (
+                          <div className="edit-task-form">
+                            <h3>Editar Tarea</h3>
+                            <form onSubmit={handleTaskEditSubmit}>
+                              <input
+                                type="text"
+                                value={editedTaskData.title}
+                                onChange={(e) => setEditedTaskData({ ...editedTaskData, title: e.target.value })}
+                                placeholder="Título"
+                                required
+                              />
+                              <textarea
+                                value={editedTaskData.description}
+                                onChange={(e) => setEditedTaskData({ ...editedTaskData, description: e.target.value })}
+                                placeholder="Descripción"
+                                required
+                              />
+                              <input
+                                type="text"
+                                value={editedTaskData.status}
+                                onChange={(e) => setEditedTaskData({ ...editedTaskData, status: e.target.value })}
+                                placeholder="Estado"
+                                required
+                              />
+                              <input
+                                type="date"
+                                value={editedTaskData.due_date}
+                                onChange={(e) => setEditedTaskData({ ...editedTaskData, due_date: e.target.value })}
+                                required
+                              />
+                              <input
+                                type="number"
+                                value={editedTaskData.assigned_to}
+                                onChange={(e) => setEditedTaskData({ ...editedTaskData, assigned_to: e.target.value })}
+                                placeholder="Asignado a (ID)"
+                                required
+                              />
+                              <button type="submit">Guardar cambios</button>
+                              <button type="button" onClick={() => setEditTask(null)}>Cancelar</button>
+                            </form>
+                          </div>
+                        )}
+
                       </div>
                     ))
+                    
                   ) : (
                     <div className="no-tasks-message">
                       No hay tareas recientes

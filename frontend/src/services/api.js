@@ -221,7 +221,7 @@ const membershipService = {
           throw error;
       }
   },
-  
+
     // Obtener todos los proyectos con filtros opcionales
     getProjects: async () => {
       try {
@@ -419,6 +419,7 @@ const membershipService = {
       }
     }
   };
+
 
   const userService = {
     // Crear un nuevo usuario
