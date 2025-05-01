@@ -225,13 +225,22 @@ const membershipService = {
     // Obtener todos los proyectos con filtros opcionales
     getProjects: async () => {
       try {
-          const response = await axios.get(`${BASE_URL}/projects`);
+          const token = localStorage.getItem('token');
+          const response = await axios.get(`${BASE_URL}/projects/`, {
+              headers: {
+                  'Authorization': `Bearer ${token}`
+              },
+              params: {
+                  limit: 100 // Asegurarse de pedir suficientes proyectos
+              }
+          });
+          console.log('Respuesta completa de proyectos:', response.data);
           return response.data;
       } catch (error) {
           console.error('Error al obtener proyectos:', error);
           throw error;
       }
-    },
+  },
   
     // Obtener un proyecto específico con todos sus detalles
     getProjectById: async (projectId) => {
@@ -320,27 +329,23 @@ const membershipService = {
     },
   
     // Obtener todas las tareas con filtros opcionales
-    getTasks: async (params = {}) => {
+    getTasks: async () => {
       try {
           const token = localStorage.getItem('token');
           if (!token) {
               throw new Error('No hay token de autenticación');
           }
 
-          const response = await axios.get(`${BASE_URL}/tasks`, {
+          console.log('Obteniendo tareas...'); // Debug log
+          const response = await axios.get(`${BASE_URL}/tasks/`, {
               headers: {
                   'Authorization': `Bearer ${token}`
-              },
-              params: {
-                  skip: params.skip,
-                  limit: params.limit,
-                  project_id: params.projectId,
-                  status: params.status
               }
           });
+          console.log('Respuesta de tareas:', response.data); // Debug log
           return response.data;
       } catch (error) {
-          console.error('Error al obtener tareas:', error);
+          console.error('Error en getTasks:', error);
           throw error;
       }
     },

@@ -1,7 +1,9 @@
 /* src/components/Home.css */
-.home-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+.home-content {
+  display: flex;
+  min-height: calc(100vh - 64px);
+  max-width: 100%;
+  overflow-x: hidden; /* Evitar scroll horizontal en toda la página */
 }
 
 .home-content {
@@ -13,6 +15,8 @@
   flex: 1;
   padding: 30px;
   animation: fadeIn 0.5s ease;
+  width: 100%;
+  overflow-x: hidden; /* Evitar scroll horizontal en el contenido principal */
 }
 
 @keyframes fadeIn {
@@ -101,8 +105,11 @@
   margin-top: 10px;
 }
 
-.projects-section, .tasks-section {
-  margin-top: 30px;
+.projects-section {
+  width: 100%;
+  position: relative;
+  padding: 20px 0;
+  overflow: hidden; /* Contener el scroll dentro de la sección */
 }
 
 .projects-section h2, .tasks-section h2 {
@@ -125,23 +132,148 @@
 }
 
 .projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  overflow-x: auto;
   gap: 20px;
+  padding: 0 20px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: calc(100vw - 60px); /* Ajustar al ancho de la ventana menos el padding */
 }
 
 .project-card {
+  min-width: 280px;
+  max-width: 280px;
+  width: 280px;
+  flex: 0 0 280px;
   background: white;
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border: 1px solid #e2e8f0;
+  margin-right: 10px;
 }
 
-.project-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+.project-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.project-card h3 {
+  font-size: 1.1rem;
+  color: #2d3748;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.project-card p {
+  color: #4a5568;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 10px 0;
+  overflow: hidden;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  max-height: 4.5em;
+}
+
+.project-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.project-card .card-footer span {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status.ACTIVE {
+  background-color: #c6f6d5;
+  color: #2f855a;
+}
+
+.status.COMPLETED {
+  background-color: #e9d8fd;
+  color: #553c9a;
+}
+
+.projects-section {
+  width: 100%;
+  overflow: hidden; /* Contener el scroll */
+  padding: 20px 0;
+}
+
+/* Añadir estos estilos para mostrar que hay más contenido */
+.projects-section::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, transparent, white);
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Mejorar la apariencia del scroll */
+.projects-grid::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.projects-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.projects-grid::-webkit-scrollbar-thumb {
+  background: #4299e1;
+  border-radius: 4px;
+}
+
+.projects-grid::-webkit-scrollbar-thumb:hover {
+  background: #3182ce;
+}
+
+/* Para Firefox */
+.projects-grid {
+  scrollbar-width: thin;
+  scrollbar-color: #4299e1 #f1f1f1;
+}
+
+.project-card h3 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 10px;
+}
+
+.project-card p {
+  overflow: hidden;
+  display: -webkit-box;
+  line-clamp: 2; /* Limitar a 2 líneas */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 }
 
 .card-header {
@@ -288,3 +420,27 @@
     grid-template-columns: 1fr;
   }
 }
+
+.projects-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.projects-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.projects-grid::-webkit-scrollbar-thumb {
+  background: #4299e1;
+  border-radius: 4px;
+}
+
+.projects-grid::-webkit-scrollbar-thumb:hover {
+  background: #3182ce;
+}
+
+/* Ocultar la barra de scroll en Firefox */
+.projects-grid {
+  scrollbar-width: thin;
+  scrollbar-color: #4299e1 #f1f1f1;
+}  
