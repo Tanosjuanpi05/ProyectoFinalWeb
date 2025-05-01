@@ -24,7 +24,7 @@ function Login() {
       localStorage.setItem('token', data.token);
       
       // Redirigir al usuario a la página principal
-      navigate('/dashboard');
+      navigate('/home');
       
     } catch (err) {
       setError(err.message || 'Ocurrió un error al iniciar sesión');
