@@ -444,3 +444,22 @@
   scrollbar-width: thin;
   scrollbar-color: #4299e1 #f1f1f1;
 }  
+
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.welcome-text {
+  color: #4a5568;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}

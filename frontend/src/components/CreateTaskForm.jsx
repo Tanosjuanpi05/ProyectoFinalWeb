@@ -30,20 +30,18 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
     setError('');
 
     try {
-      // Validar que la fecha sea futura
-      const selectedDate = new Date(formData.due_date);
-      const now = new Date();
-      
-      if (selectedDate <= now) {
-        setError('La fecha límite debe ser posterior a la fecha actual');
-        setIsSubmitting(false);
-        return;
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('No se encontró el ID del usuario');
       }
 
       const taskData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
         project_id: parseInt(formData.project_id),
-        assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : null
+        status: formData.status,
+        due_date: formData.due_date,
+        assigned_to: parseInt(userId)  // Asignar la tarea al usuario actual
       };
 
       console.log('Enviando datos de tarea:', taskData);
@@ -144,7 +142,7 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
               value={formData.due_date}
               onChange={handleChange}
               required
-              min={new Date().toISOString().slice(0, 16)} // Establece la fecha mínima como la actual
+              min={new Date().toISOString().slice(0, 16)}
             />
           </div>
 

@@ -37,5 +37,6 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user_id": user.user_id  # Cambiado de user.id a user.user_id
+        "user_id": user.user_id,  # Cambiado de user.id a user.user_id
+        "name": user.name
     }

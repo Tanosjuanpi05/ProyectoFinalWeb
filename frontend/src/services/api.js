@@ -393,14 +393,29 @@ const membershipService = {
     },
   
     // Obtener tareas de un usuario específico
-    getUserTasks: async (userId, status = null) => {
+    // En api.js - taskService
+    getUserTasks: async (userId) => {
       try {
-        const response = await axios.get(`${BASE_URL}/tasks/user/${userId}/tasks`, {
-          params: { status }
-        });
-        return response.data;
+          const token = localStorage.getItem('token');
+          if (!token) {
+              throw new Error('No hay token de autenticación');
+          }
+        
+          console.log(`Solicitando tareas para usuario ${userId}`);
+          console.log('URL:', `${BASE_URL}/tasks/user/${userId}/tasks`);
+          console.log('Token:', token);
+        
+          const response = await axios.get(`${BASE_URL}/tasks/user/${userId}/tasks`, {
+              headers: {
+                  'Authorization': `Bearer ${token}`
+              }
+          });
+        
+          console.log('Respuesta del servidor (tareas):', response.data);
+          return response.data;
       } catch (error) {
-        throw error;
+          console.error('Error detallado en getUserTasks:', error.response || error);
+          throw error;
       }
     }
   };

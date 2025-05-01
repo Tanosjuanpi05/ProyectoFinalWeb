@@ -207,22 +207,31 @@ def add_project_member(
     db.refresh(db_membership)
     return db_membership
 
-@router.get("/{project_id}/members", response_model=List[schemas.UserResponse])
-def get_project_members(project_id: int, db: Session = Depends(get_db)):
-    # Verificar si el proyecto existe
-    project = db.query(models.Project).filter(
-        models.Project.project_id == project_id
-    ).first()
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
-        )
-
-    # Obtener miembros del proyecto
-    members = db.query(models.User).join(
+@router.get("/user/{user_id}/projects", response_model=List[schemas.ProjectResponse])
+def get_user_projects(
+    user_id: int,
+    status: str = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Project).join(
         models.Membership,
-        models.User.user_id == models.Membership.user_id
-    ).filter(models.Membership.project_id == project_id).all()
+        models.Project.project_id == models.Membership.project_id
+    ).filter(
+        models.Membership.user_id == user_id
+    ).options(
+        joinedload(models.Project.tasks),
+        joinedload(models.Project.members)
+    )
 
-    return members
+    if status:
+        query = query.filter(models.Project.status == status)
+
+    projects = query.all()
+    
+    # Debug: imprimir información
+    for project in projects:
+        print(f"Project {project.project_id}:")
+        print(f"- Number of tasks: {len(project.tasks)}")
+        print(f"- Number of members: {len(project.members)}")
+
+    return projects

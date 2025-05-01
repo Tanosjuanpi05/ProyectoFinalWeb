@@ -9,6 +9,13 @@ import NavBar from './NavBar';
 
 const Home = () => {
   const navigate = useNavigate();
+
+  // Estado para la información del usuario
+  const [userInfo, setUserInfo] = useState({
+    name: localStorage.getItem('userName') || 'Usuario',
+    id: localStorage.getItem('userId') || ''
+  });
+
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +33,6 @@ const Home = () => {
       navigate('/login');
       return;
     }
-    
     loadDashboardData();
   }, [navigate]);
 
@@ -35,26 +41,29 @@ const Home = () => {
       setLoading(true);
       setError('');
 
+      // Obtener el ID del usuario actual
+      const userId = localStorage.getItem('userId');
+      console.log('ID del usuario actual:', userId);
+
+      // Obtener proyectos y tareas del usuario
       const [projectsData, tasksData] = await Promise.all([
-        projectService.getProjects(),
-        taskService.getTasks()
+        projectService.getUserProjects(userId),
+        taskService.getUserTasks(userId)  // Cambiar a getUserTasks
       ]);
 
-      console.log('Datos de tareas recibidos:', tasksData);
+      console.log('Proyectos del usuario:', projectsData);
+      console.log('Tareas del usuario:', tasksData);
 
-      // Modificar el filtrado para que sea case-insensitive
+      // Calcular stats con las tareas del usuario
       const pending = tasksData.filter(task => 
         task.status.toLowerCase() === 'todo' || 
         task.status.toLowerCase() === 'in_progress'
       ).length;
-      console.log('Tareas pendientes calculadas:', pending);
 
       const completed = tasksData.filter(task => 
         task.status.toLowerCase() === 'done'
       ).length;
-      console.log('Tareas completadas calculadas:', completed);
 
-      // Actualizar estados
       setProjects(projectsData);
       setTasks(tasksData);
       setStats({
@@ -62,11 +71,20 @@ const Home = () => {
         completedTasks: completed
       });
 
-      console.log('Stats actualizados:', { pending, completed });
-
     } catch (error) {
       console.error('Error:', error);
-      setError('Error al cargar los datos');
+      if (error.response) {
+        if (error.response.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+        } else {
+          setError(`Error al cargar los datos: ${error.response.data?.detail || 'Error del servidor'}`);
+        }
+      } else if (error.request) {
+        setError('No se pudo conectar con el servidor');
+      } else {
+        setError('Error al cargar los datos: ' + error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -88,7 +106,12 @@ const Home = () => {
       <div className="home-content">
         <main className="main-content">
           <header className="content-header">
-            <h1>Dashboard</h1>
+            <div className="welcome-section">
+              <h1>Dashboard</h1>
+              <p className="welcome-text">
+                Bienvenido: {userInfo.name} (ID: {userInfo.id})
+              </p>
+            </div>
             <div className="header-actions">
               <button 
                 className="create-button"

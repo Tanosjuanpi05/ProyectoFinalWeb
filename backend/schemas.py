@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, validator
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Annotated
 
 # Enums para valores predefinidos
 class UserRole(str, Enum):
@@ -116,38 +117,6 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
-### Project Schemas ###
-class ProjectBase(BaseModel):
-    title: str = Field(..., min_length=3, max_length=100)
-    description: str = Field(..., min_length=10, max_length=1000)
-    status: ProjectStatus = Field(default=ProjectStatus.ACTIVE)
-
-class ProjectCreate(ProjectBase):
-    owner_id: int
-
-class ProjectUpdate(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    status: Optional[ProjectStatus]
-
-class ProjectResponse(ProjectBase):
-    project_id: int
-    owner_id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-class ProjectWithDetails(ProjectResponse):
-    owner: UserResponse
-    members: List[UserResponse]
-    tasks: List["TaskResponse"]
-    comments: List["CommentResponse"]
-    files: List["FileResponse"]
-
-    class Config:
-        from_attributes = True
-
 ### Task Schemas ###
 class TaskBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=100)
@@ -178,9 +147,45 @@ class TaskResponse(TaskBase):
     task_id: int
     project_id: int
     assigned_to: Optional[int]
+    project_title: Optional[str] = None  # Añadir esta línea
+
+    class Config:
+        from_attributes = True  # Mantener from_attributes que es el equivalente actualizado de orm_mode
+
+### Project Schemas ###
+class ProjectBase(BaseModel):
+    title: str = Field(..., min_length=3, max_length=100)
+    description: str = Field(..., min_length=10, max_length=1000)
+    status: ProjectStatus = Field(default=ProjectStatus.ACTIVE)
+
+class ProjectCreate(ProjectBase):
+    owner_id: int
+
+class ProjectUpdate(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    status: Optional[ProjectStatus]
+
+class ProjectResponse(ProjectBase):
+    project_id: int
+    owner_id: int
+    created_at: datetime
+    tasks: List["TaskBase"] = []  # Usar string literal type
+    members: List["UserBase"] = []  # Usar string literal type
 
     class Config:
         from_attributes = True
+
+class ProjectWithDetails(ProjectResponse):
+    owner: UserResponse
+    members: List[UserResponse]
+    tasks: List["TaskResponse"]
+    comments: List["CommentResponse"]
+    files: List["FileResponse"]
+
+    class Config:
+        from_attributes = True
+
 
 ### File Schemas ###
 class FileBase(BaseModel):

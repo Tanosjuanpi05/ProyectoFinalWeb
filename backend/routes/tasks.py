@@ -20,26 +20,34 @@ def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     
     # Verificar si el usuario asignado existe
     if task.assigned_to:
-        user = db.query(models.User).filter(models.User.user_id == task.assigned_to).first()
-        if not user:
+        current_user = db.query(models.User).filter(models.User.user_id == task.assigned_to).first()
+        if not current_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Assigned user not found"
             )
-
-    # Crear nueva tarea
-    db_task = models.Task(
-        title=task.title,
-        description=task.description,
-        status=task.status,
-        due_date=task.due_date,
-        project_id=task.project_id,
-        assigned_to=task.assigned_to
+        
+        # Crear nueva tarea
+        db_task = models.Task(
+            title=task.title,
+            description=task.description,
+            status=task.status,
+            due_date=task.due_date,
+            project_id=task.project_id,
+            assigned_to=task.assigned_to  # Usar directamente el ID proporcionado
+        )
+        
+        db.add(db_task)
+        db.commit()
+        db.refresh(db_task)
+        
+        return db_task  # Asegurarse de que siempre devuelva la tarea creada
+    
+    # Si no hay assigned_to, lanzar una excepción
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="assigned_to is required"
     )
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
 
 @router.get("/", response_model=List[schemas.TaskBase])
 def get_tasks(
@@ -137,24 +145,32 @@ def get_project_tasks(
     tasks = query.all()
     return tasks
 
-@router.get("/user/{user_id}/tasks", response_model=List[schemas.TaskBase])
+@router.get("/user/{user_id}/tasks", response_model=List[schemas.TaskResponse])
 def get_user_tasks(
     user_id: int,
-    status: str = None,
     db: Session = Depends(get_db)
 ):
-    # Verificar si el usuario existe
-    user = db.query(models.User).filter(models.User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    # Obtener las tareas con la información del proyecto
+    tasks = db.query(models.Task).filter(
+        models.Task.assigned_to == user_id
+    ).join(
+        models.Project,
+        models.Task.project_id == models.Project.project_id
+    ).all()
 
-    query = db.query(models.Task).filter(models.Task.assigned_to == user_id)
-    
-    if status:
-        query = query.filter(models.Task.status == status)
-    
-    tasks = query.all()
-    return tasks
+    # Formatear la respuesta manualmente para incluir todos los campos requeridos
+    task_responses = []
+    for task in tasks:
+        task_response = {
+            "task_id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "status": task.status,
+            "due_date": task.due_date,
+            "project_id": task.project_id,
+            "assigned_to": task.assigned_to,
+            "project_title": task.project.title if task.project else None
+        }
+        task_responses.append(task_response)
+
+    return task_responses

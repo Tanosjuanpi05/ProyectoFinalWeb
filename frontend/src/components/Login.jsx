@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api'; // Importamos la función de login desde el servicio API
+import { loginUser } from '../services/api';
 import './Login.css';
 
 function Login() {
@@ -11,50 +10,55 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Login.jsx
-// Login.jsx
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  console.log('1. Iniciando proceso de login');
-  setError('');
-  setLoading(true);
-  
-  try {
-      console.log('2. Enviando credenciales:', { email });
-      const data = await loginUser(email, password);
-      console.log('3. Respuesta del servidor:', data);
-      
-      if (data && data.access_token) {
-          console.log('4. Token recibido:', {
-              token: data.access_token,
-              user_id: data.user_id
-          });
-          
-          localStorage.setItem('token', data.access_token);
-          
-          if (data.user_id !== undefined) {
-              localStorage.setItem('userId', data.user_id.toString());
-              const savedUserId = localStorage.getItem('userId');
-              console.log('5. User ID guardado en localStorage:', savedUserId);
-          } else {
-              console.warn('5. ⚠️ No se recibió user_id en la respuesta');
-          }
-          
-          localStorage.setItem('userEmail', email);
-          console.log('6. Navegando a /home');
-          navigate('/home');
-      } else {
-          console.warn('4. ⚠️ Respuesta incompleta:', data);
-          throw new Error('Respuesta incompleta del servidor');
-      }
-  } catch (err) {
-      console.error('❌ Error en login:', err);
-      setError(err.message || 'Error al iniciar sesión');
-  } finally {
-      setLoading(false);
-      console.log('7. Proceso de login completado');
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('1. Iniciando proceso de login');
+    setError('');
+    setLoading(true);
+    
+    try {
+        console.log('2. Enviando credenciales:', { email });
+        const data = await loginUser(email, password);
+        console.log('3. Respuesta del servidor:', data);
+        
+        if (data && data.access_token) {
+            console.log('4. Token recibido:', {
+                token: data.access_token,
+                user_id: data.user_id,
+                name: data.name
+            });
+            
+            // Guardamos todos los datos necesarios
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('userEmail', email);
+            
+            // Guardamos el ID del usuario
+            if (data.user_id !== undefined) {
+                localStorage.setItem('userId', data.user_id.toString());
+                const savedUserId = localStorage.getItem('userId');
+                console.log('5. User ID guardado en localStorage:', savedUserId);
+            } else {
+                console.warn('5. ⚠️ No se recibió user_id en la respuesta');
+            }
+            
+            // Guardamos el nombre del usuario
+            localStorage.setItem('userName', data.name || email);
+            console.log('6. Nombre de usuario guardado:', data.name || email);
+            
+            console.log('7. Navegando a /home');
+            navigate('/home');
+        } else {
+            console.warn('4. ⚠️ Respuesta incompleta:', data);
+            throw new Error('Respuesta incompleta del servidor');
+        }
+    } catch (err) {
+        console.error('❌ Error en login:', err);
+        setError(err.message || 'Error al iniciar sesión');
+    } finally {
+        setLoading(false);
+        console.log('8. Proceso de login completado');
+    }
+  };
 
   return (
     <div className="login-container">
