@@ -1,18 +1,18 @@
-// src/components/CreateProjectForm.jsx
 import React, { useState } from 'react';
 import { projectService } from '../services/api';
 import './CreateProjectForm.css';
 
 const CreateProjectForm = ({ onClose, onProjectCreated }) => {
+  // Añadir los estados faltantes
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: 'active'
   });
 
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Añadir la función handleChange que faltaba
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
@@ -26,27 +26,31 @@ const CreateProjectForm = ({ onClose, onProjectCreated }) => {
     setIsSubmitting(true);
     setError('');
 
+    const userId = localStorage.getItem('userId');
+    console.log('userId recuperado:', userId);
+
+    if (!userId) {
+      setError('No se encontró el ID del usuario. Por favor, inicie sesión nuevamente.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      console.log('Enviando datos:', formData);
-      const response = await projectService.createProject(formData);
-      console.log('Respuesta:', response);
+      const projectData = {
+        ...formData,
+        owner_id: parseInt(userId)
+      };
+      
+      console.log('Datos del proyecto a enviar:', projectData);
+      const response = await projectService.createProject(projectData);
       
       if (response) {
         onProjectCreated(response);
         onClose();
       }
     } catch (error) {
-      console.error('Error completo:', error);
-      // Manejo mejorado de errores
-      if (typeof error.response?.data === 'string') {
-        setError(error.response.data);
-      } else if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
-      } else if (Array.isArray(error.response?.data)) {
-        setError(error.response.data.map(err => err.msg).join(', '));
-      } else {
-        setError('Error al crear el proyecto. Por favor, intente nuevamente.');
-      }
+      console.error('Error al crear proyecto:', error);
+      setError(error.response?.data?.detail || 'Error al crear el proyecto');
     } finally {
       setIsSubmitting(false);
     }

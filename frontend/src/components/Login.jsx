@@ -15,56 +15,44 @@ function Login() {
 // Login.jsx
 const handleSubmit = async (e) => {
   e.preventDefault();
+  console.log('1. Iniciando proceso de login');
   setError('');
   setLoading(true);
   
   try {
+      console.log('2. Enviando credenciales:', { email });
       const data = await loginUser(email, password);
+      console.log('3. Respuesta del servidor:', data);
       
-      // Guardar el token y la información del usuario
       if (data && data.access_token) {
-          localStorage.setItem('token', data.access_token);
-          localStorage.setItem('userEmail', email); // Opcional: guardar email del usuario
+          console.log('4. Token recibido:', {
+              token: data.access_token,
+              user_id: data.user_id
+          });
           
-          // Verificar que el token se guardó correctamente
-          const savedToken = localStorage.getItem('token');
-          if (!savedToken) {
-              throw new Error('Error al guardar la sesión');
+          localStorage.setItem('token', data.access_token);
+          
+          if (data.user_id !== undefined) {
+              localStorage.setItem('userId', data.user_id.toString());
+              const savedUserId = localStorage.getItem('userId');
+              console.log('5. User ID guardado en localStorage:', savedUserId);
+          } else {
+              console.warn('5. ⚠️ No se recibió user_id en la respuesta');
           }
           
+          localStorage.setItem('userEmail', email);
+          console.log('6. Navegando a /home');
           navigate('/home');
       } else {
-          throw new Error('No se recibió el token de acceso');
+          console.warn('4. ⚠️ Respuesta incompleta:', data);
+          throw new Error('Respuesta incompleta del servidor');
       }
-      
   } catch (err) {
-      if (err.response) {
-          switch (err.response.status) {
-              case 401:
-                  setError('Email o contraseña incorrectos');
-                  // Limpiar cualquier token anterior
-                  localStorage.removeItem('token');
-                  break;
-              case 422:
-                  setError('Formato de email o contraseña inválido');
-                  break;
-              case 500:
-                  setError('Error en el servidor. Por favor, intente más tarde');
-                  break;
-              default:
-                  setError('Error al iniciar sesión. Por favor, intente nuevamente');
-          }
-      } else if (err.request) {
-          setError('No se pudo conectar con el servidor. Verifique su conexión a internet');
-      } else {
-          setError(err.message || 'Ocurrió un error inesperado');
-      }
-      console.error('Error completo:', err);
-      
-      // Limpiar el localStorage en caso de error
-      localStorage.removeItem('token');
+      console.error('❌ Error en login:', err);
+      setError(err.message || 'Error al iniciar sesión');
   } finally {
       setLoading(false);
+      console.log('7. Proceso de login completado');
   }
 };
 

@@ -204,15 +204,23 @@ const membershipService = {
   const projectService = {
     createProject: async (projectData) => {
       try {
-        console.log('Datos enviados al servidor:', projectData); // Para debugging
-        const response = await axios.post(`${BASE_URL}/projects`, projectData);
-        console.log('Respuesta del servidor:', response.data); // Para debugging
-        return response.data;
+          const token = localStorage.getItem('token');
+          if (!token) {
+              throw new Error('No hay token de autenticación');
+          }
+
+          const response = await axios.post(`${BASE_URL}/projects/`, projectData, {
+              headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+              }
+          });
+          return response.data;
       } catch (error) {
-        console.error('Error en createProject:', error);
-        throw error;
+          console.error('Error en createProject:', error);
+          throw error;
       }
-    },
+  },
   
     // Obtener todos los proyectos con filtros opcionales
     getProjects: async () => {
