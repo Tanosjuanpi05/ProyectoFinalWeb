@@ -64,7 +64,7 @@
 
 .form-group input:focus,
 .role-select:focus {
-  border-color: #4299e1;
+  border-color: #3498db;
   outline: none;
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
 }
