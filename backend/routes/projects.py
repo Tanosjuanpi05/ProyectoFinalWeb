@@ -5,8 +5,12 @@ from database import get_db
 import models
 import schemas
 from datetime import datetime
+from fastapi.security import OAuth2PasswordBearer
+from utils.auth import verify_token
 
 router = APIRouter()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 @router.post("/", response_model=schemas.ProjectResponse)
 def create_project(project: schemas.ProjectCreate, db: Session = Depends(get_db)):
@@ -56,10 +60,13 @@ def get_projects(
     skip: int = 0, 
     limit: int = 100,
     status: str = None,
+    token: str = Depends(oauth2_scheme),  # Añadir esta línea
     db: Session = Depends(get_db)
 ):
-    query = db.query(models.Project)
+    # Verificar el token
+    verify_token(token)
     
+    query = db.query(models.Project)
     if status:
         query = query.filter(models.Project.status == status)
     

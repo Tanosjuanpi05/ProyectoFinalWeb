@@ -3,6 +3,19 @@ import axios from 'axios';
 
 const BASE_URL = "http://localhost:8000/api";
 
+axios.interceptors.request.use(
+  (config) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+  },
+  (error) => {
+      return Promise.reject(error);
+  }
+);
+
 // Añadir el servicio de autenticación
 // services/api.js
 const authService = {
@@ -204,10 +217,11 @@ const membershipService = {
     // Obtener todos los proyectos con filtros opcionales
     getProjects: async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/projects`);
-        return response.data;
+          const response = await axios.get(`${BASE_URL}/projects`);
+          return response.data;
       } catch (error) {
-        throw error;
+          console.error('Error al obtener proyectos:', error);
+          throw error;
       }
     },
   
@@ -280,27 +294,46 @@ const membershipService = {
     // Crear una nueva tarea
     createTask: async (taskData) => {
       try {
-        const response = await axios.post(`${BASE_URL}/tasks/`, taskData);
-        return response.data;
+          // Asegurarse de que la fecha es futura
+          const now = new Date();
+          if (new Date(taskData.due_date) <= now) {
+              throw new Error('La fecha límite debe ser posterior a la fecha actual');
+          }
+  
+          const response = await axios.post(`${BASE_URL}/tasks/`, taskData);
+          return response.data;
       } catch (error) {
-        throw error;
+          if (error.message === 'La fecha límite debe ser posterior a la fecha actual') {
+              throw error;
+          }
+          console.error('Error al crear tarea:', error);
+          throw error;
       }
     },
   
     // Obtener todas las tareas con filtros opcionales
     getTasks: async (params = {}) => {
       try {
-        const response = await axios.get(`${BASE_URL}/tasks/`, {
-          params: {
-            skip: params.skip,
-            limit: params.limit,
-            project_id: params.projectId,
-            status: params.status
+          const token = localStorage.getItem('token');
+          if (!token) {
+              throw new Error('No hay token de autenticación');
           }
-        });
-        return response.data;
+
+          const response = await axios.get(`${BASE_URL}/tasks`, {
+              headers: {
+                  'Authorization': `Bearer ${token}`
+              },
+              params: {
+                  skip: params.skip,
+                  limit: params.limit,
+                  project_id: params.projectId,
+                  status: params.status
+              }
+          });
+          return response.data;
       } catch (error) {
-        throw error;
+          console.error('Error al obtener tareas:', error);
+          throw error;
       }
     },
   

@@ -1,7 +1,6 @@
 // src/components/Home.jsx
 // src/components/Home.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';  // Añadir esta línea
 import { projectService, taskService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import CreateProjectForm from './CreateProjectForm';
@@ -26,41 +25,48 @@ const Home = () => {
         return;
     }
 
-    const fetchData = async () => {
-        try {
-            // Usar el token en las peticiones
-            const response = await axios.get('/api/data', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            // Procesar datos...
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                // Token inválido o expirado
-                localStorage.removeItem('token');
-                navigate('/login');
-            }
-        }
-    };
-
-  fetchData();
+    loadDashboardData();
 }, [navigate]);
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true);
-      const [projectsData, tasksData] = await Promise.all([
-        projectService.getProjects(),
-        taskService.getTasks()
-      ]);
-      setProjects(projectsData);
-      setTasks(tasksData);
+        setLoading(true);
+        setError('');
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+      
+        const projectsPromise = projectService.getProjects();
+        const tasksPromise = taskService.getTasks();
+      
+        const [projectsData, tasksData] = await Promise.all([
+            projectsPromise,
+            tasksPromise
+        ]);
+      
+        setProjects(projectsData || []);
+        setTasks(tasksData || []);
     } catch (error) {
-      setError('Error al cargar los datos');
-      console.error(error);
+        console.error('Error detallado:', error);
+        if (error.message === 'No hay token de autenticación') {
+            navigate('/login');
+        } else if (error.response) {
+            if (error.response.status === 401) {
+                localStorage.removeItem('token');
+                navigate('/login');
+            } else {
+                setError(`Error al cargar los datos: ${error.response.data?.detail || 'Error del servidor'}`);
+            }
+        } else if (error.request) {
+            setError('No se pudo conectar con el servidor. Verifica que el servidor esté corriendo.');
+        } else {
+            setError('Error al cargar los datos: ' + error.message);
+        }
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 

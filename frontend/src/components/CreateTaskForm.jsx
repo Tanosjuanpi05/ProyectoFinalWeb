@@ -30,23 +30,33 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
     setError('');
 
     try {
-      const taskData = {
-        ...formData,
-        project_id: parseInt(formData.project_id),
-        assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : null
-      };
+        // Validar que la fecha sea futura
+        const selectedDate = new Date(formData.due_date);
+        const now = new Date();
+        
+        if (selectedDate <= now) {
+            setError('La fecha límite debe ser posterior a la fecha actual');
+            setIsSubmitting(false);
+            return;
+        }
 
-      console.log('Enviando datos de tarea:', taskData);
-      const response = await taskService.createTask(taskData);
-      console.log('Respuesta:', response);
-      
-      onTaskCreated(response);
-      onClose();
+        const taskData = {
+            ...formData,
+            project_id: parseInt(formData.project_id),
+            assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : null
+        };
+
+        console.log('Enviando datos de tarea:', taskData);
+        const response = await taskService.createTask(taskData);
+        console.log('Respuesta:', response);
+        
+        onTaskCreated(response);
+        onClose();
     } catch (error) {
-      console.error('Error:', error);
-      setError(error.response?.data?.detail || 'Error al crear la tarea');
+        console.error('Error:', error);
+        setError(error.response?.data?.detail || 'Error al crear la tarea');
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
@@ -128,12 +138,13 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
           <div className="form-group">
             <label htmlFor="due_date">Fecha de Vencimiento</label>
             <input
-              type="datetime-local"
-              id="due_date"
-              name="due_date"
-              value={formData.due_date}
-              onChange={handleChange}
-              required
+                type="datetime-local"
+                id="due_date"
+                name="due_date"
+                value={formData.due_date}
+                onChange={handleChange}
+                required
+                min={new Date().toISOString().slice(0, 16)} // Establece la fecha mínima como la actual
             />
           </div>
 

@@ -154,13 +154,13 @@ class TaskBase(BaseModel):
     status: TaskStatus = Field(default=TaskStatus.TODO)
     due_date: datetime = Field(...)
 
-    @validator('due_date')
-    def validate_due_date(cls, value):
-        # Asegurarse de que ambas fechas sean naive para la comparación
-        now = datetime.now()
-        if value.replace(tzinfo=None) < now:
-            raise ValueError("La fecha límite debe ser posterior a la fecha actual")
-        return value
+    #@validator('due_date')
+    #def validate_due_date(cls, value):
+    #    # Asegurarse de que ambas fechas sean naive para la comparación
+    #    now = datetime.now()
+    #    if value.replace(tzinfo=None) < now:
+    #        raise ValueError("La fecha límite debe ser posterior a la fecha actual")
+    #    return value
 
 class TaskCreate(TaskBase):
     project_id: int
