@@ -194,8 +194,10 @@ const membershipService = {
     getProjectMemberships: async (projectId) => {
       try {
         const response = await axios.get(`${BASE_URL}/memberships/project/${projectId}/memberships`);
+        console.log('Respuesta de membresías:', response.data);
         return response.data;
       } catch (error) {
+        console.error('Error al obtener membresías:', error);
         throw error;
       }
     }
@@ -498,6 +500,16 @@ updateTask: async (taskId, updateData) => {
         await axios.delete(`${BASE_URL}/users/${id}`);
         return true;
       } catch (error) {
+        throw error;
+      }
+    },
+    getUserDetails: async (userId) => {
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        if (!response.ok) throw new Error('Error al obtener detalles del usuario');
+        return response.json();
+      } catch (error) {
+        console.error('Error:', error);
         throw error;
       }
     }

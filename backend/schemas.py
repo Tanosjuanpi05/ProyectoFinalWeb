@@ -276,6 +276,16 @@ class Membership(MembershipBase):
     class Config:
         from_attributes = True
 
+class MembershipResponse(MembershipBase):
+    membership_id: int
+    user_id: int
+    project_id: int
+    joined_at: datetime
+    user: UserResponse  # Esto incluirá el nombre y otros detalles del usuario
+
+    class Config:
+        from_attributes = True
+
 
 # Referencias forward para evitar referencias circulares
 from typing import TYPE_CHECKING

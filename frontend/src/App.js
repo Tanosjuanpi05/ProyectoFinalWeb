@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Register from './components/Register';
 import Home from './components/Home';
 import Login from './components/Login';
+import ProjectView from './components/ProjectView';
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           
           {/* Opcional: redirige cualquier otra ruta a la página principal */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
+          <Route path="/" element={<Home />} />
+          <Route path="/project/:projectId" element={<ProjectView />} />
         </Routes>
       </div>
     </Router>

@@ -281,79 +281,6 @@ const handleProjectEditSubmit = async (e) => {
 };
 
 
-const handleShowAddMember = async (projectId) => {
-  try {
-    setSelectedProject(projectId);
-    
-    // Obtener todos los usuarios y miembros del proyecto en paralelo
-    const [allUsers, projectMembers] = await Promise.all([
-      userService.getUsers(),
-      membershipService.getProjectMemberships(projectId)
-    ]);
-
-    // Verificar que tenemos datos válidos
-    if (!Array.isArray(allUsers)) {
-      console.error('La respuesta de usuarios no es un array:', allUsers);
-      throw new Error('Error al obtener la lista de usuarios');
-    }
-
-    if (!Array.isArray(projectMembers)) {
-      console.error('La respuesta de miembros no es un array:', projectMembers);
-      throw new Error('Error al obtener la lista de miembros');
-    }
-
-    // Obtener el ID del usuario actual
-    const currentUserId = parseInt(localStorage.getItem('userId'));
-    
-    // Obtener los IDs de los miembros actuales del proyecto
-    const memberIds = projectMembers.map(member => 
-      typeof member.user_id === 'number' ? member.user_id : parseInt(member.user_id)
-    );
-
-    // Filtrar usuarios disponibles
-    const filteredUsers = allUsers.filter(user => {
-      const userId = typeof user.user_id === 'number' ? user.user_id : parseInt(user.user_id);
-      return userId !== currentUserId && !memberIds.includes(userId);
-    });
-
-    console.log('Usuarios filtrados:', filteredUsers); // Para debugging
-
-    setAvailableUsers(filteredUsers);
-    setShowAddMember(true);
-    setError(''); // Limpiar cualquier error previo
-
-  } catch (error) {
-    console.error('Error detallado:', error);
-    setError('Error al cargar la lista de usuarios disponibles. Por favor, intente nuevamente.');
-    setShowAddMember(false);
-  }
-};
-
-const handleAddMember = async () => {
-  try {
-    if (!selectedUser || !selectedProject) {
-      setError('Por favor seleccione un usuario');
-      return;
-    }
-
-    await membershipService.createMembership({
-      user_id: parseInt(selectedUser),
-      project_id: selectedProject,
-      role: 'member'
-    });
-
-    setShowAddMember(false);
-    setSelectedUser('');
-    setSelectedProject(null);
-    await loadDashboardData();
-    setError('');
-  } catch (error) {
-    console.error('Error al agregar miembro:', error);
-    setError('Error al agregar el miembro al proyecto');
-  }
-};
-
-
   return (
     <div className="home-page">
       <NavBar />
@@ -407,36 +334,39 @@ const handleAddMember = async () => {
                 <h2>Proyectos Recientes</h2>
                 <div className="projects-grid">
                 {projects.map(project => (
-                  <div key={project.project_id} className="project-card">
-                    <div className="card-header">
-                      <h3 title={project.title}>{project.title}</h3>
-                      <span className={`status ${project.status}`}>
-                        {project.status}
-                      </span>
-                    </div>
-                    <p title={project.description}>
-                      {project.description.length > 100 
-                        ? `${project.description.substring(0, 100)}...` 
-                        : project.description}
-                    </p>
-                    <div className="card-footer">
-                      <span>Miembros: {project.members?.length || 0}</span>
-                      <span>Tareas: {project.tasks?.length || 0}</span>
-                    </div>
-                    
-                    {/* Solo mostrar los botones si el usuario actual es el owner */}
-                    {project.owner_id === parseInt(userInfo.id) && (
-                      <div className="card-actions">
-                        <button onClick={() => handleEditProject(project.project_id)}>
-                          Editar
-                        </button>
-                        <button onClick={() => handleDeleteProject(project.project_id)}>
-                          Eliminar
-                        </button>
-                        <button onClick={() => handleShowAddMember(project.project_id)}>
-                          Agregar Miembro
-                        </button>
-                      </div> )}
+  <div key={project.project_id} className="project-card">
+    <div 
+      className="card-content"
+      onClick={() => navigate(`/project/${project.project_id}`)}
+      style={{ cursor: 'pointer' }}
+    >
+      <div className="card-header">
+        <h3 title={project.title}>{project.title}</h3>
+        <span className={`status ${project.status}`}>
+          {project.status}
+        </span>
+      </div>
+      <p title={project.description}>
+        {project.description.length > 100 
+          ? `${project.description.substring(0, 100)}...` 
+          : project.description}
+      </p>
+      <div className="card-footer">
+        <span>Miembros: {project.members?.length || 0}</span>
+        <span>Tareas: {project.tasks?.length || 0}</span>
+      </div>
+    </div>
+    
+    {/* Botones de acción fuera del área clickeable */}
+    {project.owner_id === parseInt(userInfo.id) && (
+      <div className="card-actions" onClick={e => e.stopPropagation()}>
+        <button onClick={() => handleEditProject(project.project_id)}>
+          Editar
+        </button>
+        <button onClick={() => handleDeleteProject(project.project_id)}>
+          Eliminar
+        </button>
+      </div> )}
                       {editProject && (
                        <div className="edit-project-form">
                           <h3>Editar Proyecto</h3>
@@ -474,29 +404,6 @@ const handleAddMember = async () => {
                     
                   ))}
                 </div>
-                {showAddMember && (
-                  <div className="modal">
-                    <div className="modal-content">
-                      <h3>Agregar Miembro al Proyecto</h3>
-                      <select
-                        value={selectedUser}
-                        onChange={(e) => setSelectedUser(e.target.value)}
-                        required
-                      >
-                        <option value="">Seleccione un usuario</option>
-                        {availableUsers.map(user => (
-                          <option key={user.user_id} value={user.user_id}>
-                            {user.name} ({user.email})
-                          </option>
-                        ))}
-                      </select>
-                      <div className="modal-actions">
-                        <button onClick={handleAddMember}>Agregar</button>
-                        <button onClick={() => setShowAddMember(false)}>Cancelar</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </section>
 
               <section className="tasks-section">
