@@ -134,8 +134,9 @@ def delete_membership(membership_id: int, db: Session = Depends(get_db)):
         )
 
     # Verificar si es el último owner
+# En la misma función delete_membership, corregir esta línea:
     if db_membership.role == "owner":
-        owner_count = db.query(models.MembershipBase).filter(
+        owner_count = db.query(models.Membership).filter(  # Cambiar MembershipBase por Membership
             models.Membership.project_id == db_membership.project_id,
             models.Membership.role == "owner"
         ).count()
@@ -164,6 +165,7 @@ def get_user_memberships(user_id: int, db: Session = Depends(get_db)):
     ).all()
     return memberships
 
+
 @router.get("/project/{project_id}/memberships", response_model=List[schemas.MembershipBase])
 def get_project_memberships(project_id: int, db: Session = Depends(get_db)):
     # Verificar si el proyecto existe
@@ -176,7 +178,8 @@ def get_project_memberships(project_id: int, db: Session = Depends(get_db)):
             detail="Project not found"
         )
 
-    memberships = db.query(models.MembershipBase).filter(
+    # Corregir aquí: cambiar models.MembershipBase por models.Membership
+    memberships = db.query(models.Membership).filter(
         models.Membership.project_id == project_id
     ).all()
     return memberships

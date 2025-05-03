@@ -1,6 +1,6 @@
 // src/components/Home.jsx
 import React, { useState, useEffect } from 'react';
-import { projectService, taskService } from '../services/api';
+import { projectService, taskService, userService, membershipService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import CreateProjectForm from './CreateProjectForm';
 import CreateTaskForm from './CreateTaskForm';
@@ -41,6 +41,10 @@ const Home = () => {
     completedTasks: 0
     
   });
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -115,30 +119,44 @@ const Home = () => {
     loadDashboardData();
   };
 
-const handleDeleteProject = async (projectId) => {
-  try {
-    const success = await projectService.deleteProject(projectId);
-    if (success) {
-      setProjects(prevProjects => prevProjects.filter(project => project.id !== projectId));
-    }
-  } catch (error) {
-    console.error('Error al eliminar el proyecto:', error);
-    setError('No se pudo eliminar el proyecto.');
-  }
-};
 
-
-const handleDeleteTask = async (taskId) => {
-  try {
-    const success = await taskService.deleteTask(taskId);
-    if (success) {
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+  const handleDeleteProject = async (projectId) => {
+    const confirmDelete = window.confirm('¿Estás seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.');
+    
+    if (confirmDelete) {
+      try {
+        const success = await projectService.deleteProject(projectId);
+        if (success) {
+          // Primero actualizamos el estado local
+          setProjects(prevProjects => prevProjects.filter(project => project.id !== projectId));
+          // Luego recargamos todos los datos del dashboard
+          await loadDashboardData();
+        }
+      } catch (error) {
+        console.error('Error al eliminar el proyecto:', error);
+        setError('No se pudo eliminar el proyecto.');
+      }
     }
-  } catch (error) {
-    console.error('Error al eliminar la tarea:', error);
-    setError('No se pudo eliminar la tarea.');
-  }
-};
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    const confirmDelete = window.confirm('¿Estás seguro que deseas eliminar esta tarea? Esta acción no se puede deshacer.');
+    
+    if (confirmDelete) {
+      try {
+        const success = await taskService.deleteTask(taskId);
+        if (success) {
+          // Primero actualizamos el estado local
+          setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+          // Luego recargamos todos los datos del dashboard
+          await loadDashboardData();
+        }
+      } catch (error) {
+        console.error('Error al eliminar la tarea:', error);
+        setError('No se pudo eliminar la tarea.');
+      }
+    }
+  };
 
 const handleEditTask = (taskId) => {
   // Encuentra la tarea usando task_id
@@ -263,6 +281,79 @@ const handleProjectEditSubmit = async (e) => {
 };
 
 
+const handleShowAddMember = async (projectId) => {
+  try {
+    setSelectedProject(projectId);
+    
+    // Obtener todos los usuarios y miembros del proyecto en paralelo
+    const [allUsers, projectMembers] = await Promise.all([
+      userService.getUsers(),
+      membershipService.getProjectMemberships(projectId)
+    ]);
+
+    // Verificar que tenemos datos válidos
+    if (!Array.isArray(allUsers)) {
+      console.error('La respuesta de usuarios no es un array:', allUsers);
+      throw new Error('Error al obtener la lista de usuarios');
+    }
+
+    if (!Array.isArray(projectMembers)) {
+      console.error('La respuesta de miembros no es un array:', projectMembers);
+      throw new Error('Error al obtener la lista de miembros');
+    }
+
+    // Obtener el ID del usuario actual
+    const currentUserId = parseInt(localStorage.getItem('userId'));
+    
+    // Obtener los IDs de los miembros actuales del proyecto
+    const memberIds = projectMembers.map(member => 
+      typeof member.user_id === 'number' ? member.user_id : parseInt(member.user_id)
+    );
+
+    // Filtrar usuarios disponibles
+    const filteredUsers = allUsers.filter(user => {
+      const userId = typeof user.user_id === 'number' ? user.user_id : parseInt(user.user_id);
+      return userId !== currentUserId && !memberIds.includes(userId);
+    });
+
+    console.log('Usuarios filtrados:', filteredUsers); // Para debugging
+
+    setAvailableUsers(filteredUsers);
+    setShowAddMember(true);
+    setError(''); // Limpiar cualquier error previo
+
+  } catch (error) {
+    console.error('Error detallado:', error);
+    setError('Error al cargar la lista de usuarios disponibles. Por favor, intente nuevamente.');
+    setShowAddMember(false);
+  }
+};
+
+const handleAddMember = async () => {
+  try {
+    if (!selectedUser || !selectedProject) {
+      setError('Por favor seleccione un usuario');
+      return;
+    }
+
+    await membershipService.createMembership({
+      user_id: parseInt(selectedUser),
+      project_id: selectedProject,
+      role: 'member'
+    });
+
+    setShowAddMember(false);
+    setSelectedUser('');
+    setSelectedProject(null);
+    await loadDashboardData();
+    setError('');
+  } catch (error) {
+    console.error('Error al agregar miembro:', error);
+    setError('Error al agregar el miembro al proyecto');
+  }
+};
+
+
   return (
     <div className="home-page">
       <NavBar />
@@ -315,60 +406,97 @@ const handleProjectEditSubmit = async (e) => {
               <section className="projects-section">
                 <h2>Proyectos Recientes</h2>
                 <div className="projects-grid">
-                  {projects.map(project => (
-                    <div key={project.project_id} className="project-card">
-                      <div className="card-header">
-                        <h3 title={project.title}>{project.title}</h3>
-                        <span className={`status ${project.status}`}>
-                          {project.status}
-                        </span>
-                      </div>
-                      <p title={project.description}>
-                        {project.description.length > 100 
-                          ? `${project.description.substring(0, 100)}...` 
-                          : project.description}
-                      </p>
-                      <div className="card-footer">
-                        <span>Miembros: {project.members?.length || 0}</span>
-                        <span>Tareas: {project.tasks?.length || 0}</span>
-                      </div>
+                {projects.map(project => (
+                  <div key={project.project_id} className="project-card">
+                    <div className="card-header">
+                      <h3 title={project.title}>{project.title}</h3>
+                      <span className={`status ${project.status}`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p title={project.description}>
+                      {project.description.length > 100 
+                        ? `${project.description.substring(0, 100)}...` 
+                        : project.description}
+                    </p>
+                    <div className="card-footer">
+                      <span>Miembros: {project.members?.length || 0}</span>
+                      <span>Tareas: {project.tasks?.length || 0}</span>
+                    </div>
+                    
+                    {/* Solo mostrar los botones si el usuario actual es el owner */}
+                    {project.owner_id === parseInt(userInfo.id) && (
                       <div className="card-actions">
-                        <button onClick={() => handleEditProject(project.project_id)}>Editar</button>
-                        <button onClick={() => handleDeleteProject(project.project_id)}>Eliminar</button>
-                      </div>
+                        <button onClick={() => handleEditProject(project.project_id)}>
+                          Editar
+                        </button>
+                        <button onClick={() => handleDeleteProject(project.project_id)}>
+                          Eliminar
+                        </button>
+                        <button onClick={() => handleShowAddMember(project.project_id)}>
+                          Agregar Miembro
+                        </button>
+                      </div> )}
                       {editProject && (
-                          <div className="edit-project-form">
-                            <h3>Editar Proyecto</h3>
-                            <form onSubmit={handleProjectEditSubmit}>
-                              <input
-                                type="text"
-                                value={editedProjectData.title}
-                                onChange={(e) => setEditedProjectData({ ...editedProjectData, title: e.target.value })}
-                                placeholder="Título"
-                                required
-                              />
-                              <textarea
-                                value={editedProjectData.description}
-                                onChange={(e) => setEditedProjectData({ ...editedProjectData, description: e.target.value })}
-                                placeholder="Descripción"
-                                required
-                              />
-                              <input
-                                type="text"
-                                value={editedProjectData.status}
-                                onChange={(e) => setEditedProjectData({ ...editedProjectData, status: e.target.value })}
-                                placeholder="Estado"
-                                required
-                              />
-                              <button type="submit">Guardar cambios</button>
-                              <button type="button" onClick={() => setEditProject(null)}>Cancelar</button>
-                            </form>
-                          </div>
-                        )}  
+                       <div className="edit-project-form">
+                          <h3>Editar Proyecto</h3>
+                          <form onSubmit={handleProjectEditSubmit}>
+                            <input
+                              type="text"
+                              value={editedProjectData.title}
+                              onChange={(e) => setEditedProjectData({ ...editedProjectData, title: e.target.value })}
+                              placeholder="Título"
+                              required
+                            />
+                            <textarea
+                              value={editedProjectData.description}
+                              onChange={(e) => setEditedProjectData({ ...editedProjectData, description: e.target.value })}
+                              placeholder="Descripción"
+                              required
+                            />
+                            <select
+                              value={editedProjectData.status}
+                              onChange={(e) => setEditedProjectData({ ...editedProjectData, status: e.target.value })}
+                              required
+                            >
+                              <option value="">Seleccione un estado</option>
+                              <option value="active">Activo</option>
+                              <option value="completed">Completado</option>
+                              <option value="on_hold">En espera</option>
+                              <option value="cancelled">Cancelado</option>
+                            </select>
+                            <button type="submit">Guardar cambios</button>
+                            <button type="button" onClick={() => setEditProject(null)}>Cancelar</button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                     
                   ))}
                 </div>
+                {showAddMember && (
+                  <div className="modal">
+                    <div className="modal-content">
+                      <h3>Agregar Miembro al Proyecto</h3>
+                      <select
+                        value={selectedUser}
+                        onChange={(e) => setSelectedUser(e.target.value)}
+                        required
+                      >
+                        <option value="">Seleccione un usuario</option>
+                        {availableUsers.map(user => (
+                          <option key={user.user_id} value={user.user_id}>
+                            {user.name} ({user.email})
+                          </option>
+                        ))}
+                      </select>
+                      <div className="modal-actions">
+                        <button onClick={handleAddMember}>Agregar</button>
+                        <button onClick={() => setShowAddMember(false)}>Cancelar</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </section>
 
               <section className="tasks-section">

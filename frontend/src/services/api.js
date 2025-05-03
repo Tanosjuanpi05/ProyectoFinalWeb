@@ -458,9 +458,16 @@ updateTask: async (taskId, updateData) => {
     // Obtener todos los usuarios
     getUsers: async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/users/`);
+        const response = await axios.get(`${BASE_URL}/users/`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        console.log('Respuesta de usuarios:', response.data); // Para debugging
         return response.data;
       } catch (error) {
+        console.error('Error en getUsers:', error);
         throw error;
       }
     },
