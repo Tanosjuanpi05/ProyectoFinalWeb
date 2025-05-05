@@ -334,39 +334,39 @@ const handleProjectEditSubmit = async (e) => {
                 <h2>Proyectos Recientes</h2>
                 <div className="projects-grid">
                 {projects.map(project => (
-  <div key={project.project_id} className="project-card">
-    <div 
-      className="card-content"
-      onClick={() => navigate(`/project/${project.project_id}`)}
-      style={{ cursor: 'pointer' }}
-    >
-      <div className="card-header">
-        <h3 title={project.title}>{project.title}</h3>
-        <span className={`status ${project.status}`}>
-          {project.status}
-        </span>
-      </div>
-      <p title={project.description}>
-        {project.description.length > 100 
-          ? `${project.description.substring(0, 100)}...` 
-          : project.description}
-      </p>
-      <div className="card-footer">
-        <span>Miembros: {project.members?.length || 0}</span>
-        <span>Tareas: {project.tasks?.length || 0}</span>
-      </div>
-    </div>
-    
-    {/* Botones de acción fuera del área clickeable */}
-    {project.owner_id === parseInt(userInfo.id) && (
-      <div className="card-actions" onClick={e => e.stopPropagation()}>
-        <button onClick={() => handleEditProject(project.project_id)}>
-          Editar
-        </button>
-        <button onClick={() => handleDeleteProject(project.project_id)}>
-          Eliminar
-        </button>
-      </div> )}
+                <div key={project.project_id} className="project-card">
+                  <div 
+                    className="card-content"
+                    onClick={() => navigate(`/project/${project.project_id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="card-header">
+                      <h3 title={project.title}>{project.title}</h3>
+                      <span className={`status ${project.status}`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p title={project.description}>
+                      {project.description.length > 100 
+                        ? `${project.description.substring(0, 100)}...` 
+                        : project.description}
+                    </p>
+                    <div className="card-footer">
+                      <span>Miembros: {project.members?.length || 0}</span>
+                      <span>Tareas: {project.tasks?.length || 0}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Botones de acción fuera del área clickeable */}
+                  {project.owner_id === parseInt(userInfo.id) && (
+                    <div className="card-actions" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleEditProject(project.project_id)}>
+                        Editar
+                      </button>
+                      <button onClick={() => handleDeleteProject(project.project_id)}>
+                        Eliminar
+                      </button>
+                    </div> )}
                       {editProject && (
                        <div className="edit-project-form">
                           <h3>Editar Proyecto</h3>

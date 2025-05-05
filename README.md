@@ -1,121 +1,194 @@
 # ProyectoFinalWeb
-Proyecto final - Desarrollo Web
 
-## Backend Documentation - Project Management API
+Proyecto final para la gestión de proyectos, desarrollado como parte del curso de Desarrollo Web. Este sistema permite a los usuarios gestionar proyectos, tareas, comentarios, archivos y membresías de manera eficiente.
 
-### Overview
-This is a RESTful API built with FastAPI for a project management system. It provides endpoints for managing users, projects, tasks, comments, files, and project memberships.
+## Tabla de Contenidos
 
-### Technology Stack
+- [Descripción](#descripción)
+- [Características](#características)
+- [Tecnologías Utilizadas](#tecnologías-utilizadas)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Instalación y Configuración](#instalación-y-configuración)
+- [API Endpoints](#api-endpoints)
+- [Modelos de Datos](#modelos-de-datos)
+- [Validaciones](#validaciones)
+- [Errores y Manejo de Excepciones](#errores-y-manejo-de-excepciones)
+- [Desarrollo y Pruebas](#desarrollo-y-pruebas)
+- [Contribuciones](#contribuciones)
+- [Licencia](#licencia)
+
+---
+
+## Descripción
+
+Este proyecto es una aplicación web para la gestión de proyectos. Los usuarios pueden crear proyectos, asignar tareas, agregar comentarios, subir archivos y gestionar membresías. La aplicación incluye un backend desarrollado con FastAPI y un frontend construido con React.
+
+---
+
+## Características
+
+- **Gestión de Proyectos**: Crear, editar y eliminar proyectos.
+- **Gestión de Tareas**: Asignar tareas a proyectos y usuarios.
+- **Comentarios**: Agregar y gestionar comentarios en proyectos.
+- **Archivos**: Subir y gestionar archivos relacionados con proyectos.
+- **Membresías**: Gestionar miembros de proyectos con roles específicos.
+- **Autenticación**: Sistema de autenticación basado en JWT.
+- **Interfaz de Usuario**: Interfaz moderna y responsiva con React.
+
+---
+
+## Tecnologías Utilizadas
+
+### Backend
 - **Framework**: FastAPI
-- **Database**: MySQL with SQLAlchemy ORM
-- **Authentication**: JWT (JSON Web Tokens)
-- **Documentation**: Swagger UI / ReDoc
+- **Base de Datos**: MySQL con SQLAlchemy ORM
+- **Autenticación**: JWT (JSON Web Tokens)
+- **Documentación**: Swagger UI / ReDoc
 
-### Project Structure
+### Frontend
+- **Framework**: React
+- **Estilos**: CSS y librerías personalizadas
+- **Gestión de Estado**: Hooks de React
+
+---
+
+## Estructura del Proyecto
+
 ```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py
+ProyectoFinalWeb/
+├── backend/
 │   ├── database.py
+│   ├── main.py
 │   ├── models.py
+│   ├── requirements.txt
 │   ├── schemas.py
-│   └── routes/
-│       ├── __init__.py
-│       ├── users.py
-│       ├── projects.py
-│       ├── tasks.py
-│       ├── comments.py
-│       ├── files.py
-│       └── memberships.py
-├── requirements.txt
-└── .env
+│   ├── routes/
+│   │   ├── auth.py
+│   │   ├── comments.py
+│   │   ├── memberships.py
+│   │   ├── projects.py
+│   │   ├── tasks.py
+│   │   └── users.py
+│   └── utils/
+│       └── auth.py
+├── frontend/
+│   ├── public/
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   ├── src/
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── index.css
+│   │   ├── index.js
+│   │   ├── components/
+│   │   │   ├── CreateProjectForm.jsx
+│   │   │   ├── CreateTaskForm.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── NavBar.jsx
+│   │   │   ├── ProjectView.jsx
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── TaskView.jsx
+│   │   └── services/
+│       └── api.js
 ```
 
-## Installation and Setup
+---
 
-### Clone the repository
-```bash
-git clone <repository-url>
-cd backend
-```
+## Instalación y Configuración
 
-### Create and activate virtual environment
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
+### Backend
 
-### Install dependencies
-```bash
-pip install -r requirements.txt
-```
+1. Clona el repositorio:
+   ```bash
+   git clone <repository-url>
+   cd backend
+   ```
 
-### Configure environment variables
-Create a `.env` file with:
-```
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_DATABASE=project_management
-```
+2. Crea y activa un entorno virtual:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   venv\Scripts\activate     # Windows
+   ```
 
-### Run the application
-```bash
-uvicorn app.main:app --reload
-```
+3. Instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Configura las variables de entorno en un archivo `.env`:
+   ```
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=
+   DB_DATABASE=project_management
+   ```
+
+5. Ejecuta el servidor:
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+### Frontend
+
+1. Navega al directorio `frontend`:
+   ```bash
+   cd frontend
+   ```
+
+2. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+
+3. Inicia la aplicación:
+   ```bash
+   npm start
+   ```
+
+---
 
 ## API Endpoints
 
-### Users
-- `POST /api/users/` - Create new user
-- `GET /api/users/` - Get all users
-- `GET /api/users/{user_id}` - Get specific user
-- `PUT /api/users/{user_id}` - Update user
-- `DELETE /api/users/{user_id}` - Delete user
+### Usuarios
+- `POST /api/users/` - Crear usuario
+- `GET /api/users/` - Obtener todos los usuarios
+- `GET /api/users/{user_id}` - Obtener usuario específico
+- `PUT /api/users/{user_id}` - Actualizar usuario
+- `DELETE /api/users/{user_id}` - Eliminar usuario
 
-### Projects
-- `POST /api/projects/` - Create new project
-- `GET /api/projects/` - Get all projects
-- `GET /api/projects/{project_id}` - Get project details
-- `PUT /api/projects/{project_id}` - Update project
-- `DELETE /api/projects/{project_id}` - Delete project
-- `GET /api/projects/{project_id}/members` - Get project members
+### Proyectos
+- `POST /api/projects/` - Crear proyecto
+- `GET /api/projects/` - Obtener todos los proyectos
+- `GET /api/projects/{project_id}` - Obtener detalles de un proyecto
+- `PUT /api/projects/{project_id}` - Actualizar proyecto
+- `DELETE /api/projects/{project_id}` - Eliminar proyecto
 
-### Tasks
-- `POST /api/tasks/` - Create new task
-- `GET /api/tasks/` - Get all tasks
-- `GET /api/tasks/{task_id}` - Get specific task
-- `PUT /api/tasks/{task_id}` - Update task
-- `DELETE /api/tasks/{task_id}` - Delete task
-- `GET /api/projects/{project_id}/tasks` - Get project tasks
+### Tareas
+- `POST /api/tasks/` - Crear tarea
+- `GET /api/tasks/` - Obtener todas las tareas
+- `GET /api/tasks/{task_id}` - Obtener tarea específica
+- `PUT /api/tasks/{task_id}` - Actualizar tarea
+- `DELETE /api/tasks/{task_id}` - Eliminar tarea
 
-### Comments
-- `POST /api/comments/` - Create new comment
-- `GET /api/comments/` - Get all comments
-- `GET /api/comments/{comment_id}` - Get specific comment
-- `PUT /api/comments/{comment_id}` - Update comment
-- `DELETE /api/comments/{comment_id}` - Delete comment
-- `GET /api/projects/{project_id}/comments` - Get project comments
+### Comentarios
+- `POST /api/comments/` - Crear comentario
+- `GET /api/comments/` - Obtener todos los comentarios
+- `GET /api/comments/{comment_id}` - Obtener comentario específico
+- `PUT /api/comments/{comment_id}` - Actualizar comentario
+- `DELETE /api/comments/{comment_id}` - Eliminar comentario
 
-### Files
-- `POST /api/files/` - Upload file
-- `GET /api/files/` - Get all files
-- `GET /api/files/{file_id}` - Get file details
-- `DELETE /api/files/{file_id}` - Delete file
-- `GET /api/projects/{project_id}/files` - Get project files
+---
 
-### Memberships
-- `POST /api/memberships/` - Create membership
-- `GET /api/memberships/` - Get all memberships
-- `PUT /api/memberships/{membership_id}` - Update membership
-- `DELETE /api/memberships/{membership_id}` - Delete membership
+## Modelos de Datos
 
-## Data Models
-
-### User
+### Usuario
 ```json
 {
     "user_id": int,
@@ -126,7 +199,7 @@ uvicorn app.main:app --reload
 }
 ```
 
-### Project
+### Proyecto
 ```json
 {
     "project_id": int,
@@ -138,7 +211,7 @@ uvicorn app.main:app --reload
 }
 ```
 
-### Task
+### Tarea
 ```json
 {
     "task_id": int,
@@ -151,76 +224,74 @@ uvicorn app.main:app --reload
 }
 ```
 
-## Validation Rules
+---
 
-### Users
-- Name: 2-50 characters, alphanumeric
-- Email: Valid email format
-- Password:
-    - Minimum 8 characters
-    - At least one number
-    - At least one uppercase letter
-    - At least one special character
+## Validaciones
 
-### Projects
-- Title: 3-100 characters
-- Description: 10-1000 characters
-- Valid status enum value
+- **Usuarios**:
+  - Nombre: 2-50 caracteres, alfanumérico.
+  - Email: Formato válido.
+  - Contraseña: Mínimo 8 caracteres, al menos un número, una letra mayúscula y un carácter especial.
 
-### Tasks
-- Title: 3-100 characters
-- Description: 10-500 characters
-- Due date must be in the future
-- Valid status enum value
+- **Proyectos**:
+  - Título: 3-100 caracteres.
+  - Descripción: 10-1000 caracteres.
+  - Estado: Valor válido del enum.
 
-## Error Handling
-The API uses standard HTTP status codes:
+- **Tareas**:
+  - Título: 3-100 caracteres.
+  - Descripción: 10-500 caracteres.
+  - Fecha de vencimiento: Debe ser futura.
 
-| Code | Description |
-|------|-------------|
-| 200  | Success |
-| 201  | Created |
-| 400  | Bad Request |
-| 401  | Unauthorized |
-| 403  | Forbidden |
-| 404  | Not Found |
-| 500  | Internal Server Error |
+---
 
-## Documentation
-API documentation is available at:
+## Errores y Manejo de Excepciones
 
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+El API utiliza códigos de estado HTTP estándar:
 
-## Development
-To run in development mode:
+| Código | Descripción           |
+|-------|-----------------------|
+| 200   | Éxito                |
+| 201   | Creado               |
+| 400   | Solicitud Incorrecta |
+| 401   | No Autorizado        |
+| 403   | Prohibido            |
+| 404   | No Encontrado        |
+| 500   | Error Interno        |
 
+---
+
+## Desarrollo y Pruebas
+
+### Modo Desarrollo
+Ejecuta el backend en modo desarrollo:
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Testing
-To run tests:
+Ejecuta el frontend en modo desarrollo:
+```bash
+npm start
+```
 
+### Pruebas
+Ejecuta las pruebas del backend:
 ```bash
 pytest
 ```
 
-## Dependencies
-- fastapi
-- uvicorn
-- sqlalchemy
-- pydantic
-- python-dotenv
-- mysql-connector-python
-- email-validator
-- python-jose[cryptography]
-- passlib[bcrypt]
-- python-multipart
+---
 
-## Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Create a Pull Request
+## Contribuciones
+
+1. Haz un fork del repositorio.
+2. Crea una rama para tu funcionalidad (`git checkout -b feature/nueva-funcionalidad`).
+3. Realiza los cambios y haz commit (`git commit -m 'Añadir nueva funcionalidad'`).
+4. Haz push a tu rama (`git push origin feature/nueva-funcionalidad`).
+5. Abre un Pull Request.
+
+---
+
+## Licencia
+
+Este proyecto está licenciado bajo la [MIT License](LICENSE).
