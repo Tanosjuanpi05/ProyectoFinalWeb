@@ -53,6 +53,27 @@ const authService = {
               throw new Error('Error al procesar la solicitud');
           }
       }
+  },
+  // En services/api.js, modifica la función validateToken en authService
+  validateToken: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+
+      // Usar la ruta BASE_URL correcta
+      const response = await axios.get(`${BASE_URL}/auth/validate`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      return response.status === 200;
+    } catch (error) {
+      console.error('Error validando token:', error);
+      // Si hay error en la validación, limpiar el localStorage
+      localStorage.clear();
+      return false;
+    }
   }
 };
 
@@ -365,7 +386,13 @@ const membershipService = {
     // Obtener una tarea específica
     getTaskById: async (taskId) => {
       try {
-        const response = await axios.get(`${BASE_URL}/tasks/${taskId}`);
+        // Agregar parámetro para incluir información relacionada
+        const response = await axios.get(`${BASE_URL}/tasks/${taskId}`, {
+          params: {
+            include_project: true,
+            include_assigned: true
+          }
+        });
         return response.data;
       } catch (error) {
         throw error;
@@ -475,9 +502,9 @@ updateTask: async (taskId, updateData) => {
     },
   
     // Obtener un usuario por ID
-    getUserById: async (id) => {
+    getUserById: async (userId) => {
       try {
-        const response = await axios.get(`${BASE_URL}/users/${id}`);
+        const response = await axios.get(`${BASE_URL}/users/${userId}`);
         return response.data;
       } catch (error) {
         throw error;

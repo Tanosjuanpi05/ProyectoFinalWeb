@@ -49,36 +49,38 @@ def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
         detail="assigned_to is required"
     )
 
-@router.get("/", response_model=List[schemas.TaskBase])
-def get_tasks(
-    skip: int = 0, 
-    limit: int = 100, 
-    project_id: int = None,
-    status: str = None,
-    db: Session = Depends(get_db)
-):
-    query = db.query(models.Task)
-    
-    # Filtrar por proyecto si se especifica
-    if project_id:
-        query = query.filter(models.Task.project_id == project_id)
-    
-    # Filtrar por estado si se especifica
-    if status:
-        query = query.filter(models.Task.status == status)
-    
-    tasks = query.offset(skip).limit(limit).all()
-    return tasks
+# En routes/tasks.py, modifica el endpoint get_task:
 
-@router.get("/{task_id}", response_model=schemas.TaskBase)
+@router.get("/{task_id}", response_model=schemas.TaskResponse)  # Cambiar a TaskResponse
 def get_task(task_id: int, db: Session = Depends(get_db)):
-    task = db.query(models.Task).filter(models.Task.task_id == task_id).first()
+    # Obtener la tarea con información del proyecto usando join
+    task = db.query(models.Task).join(
+        models.Project,
+        models.Task.project_id == models.Project.project_id
+    ).filter(
+        models.Task.task_id == task_id
+    ).first()
+
     if task is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
         )
-    return task
+
+    # Crear el objeto de respuesta con la información adicional
+    task_response = {
+        "task_id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "status": task.status,
+        "due_date": task.due_date,
+        "project_id": task.project_id,
+        "assigned_to": task.assigned_to,
+        "project_title": task.project.title if task.project else None,
+        "project_status": task.project.status if task.project else None
+    }
+
+    return task_response
 
 @router.put("/{task_id}", response_model=schemas.TaskBase)
 def update_task(

@@ -405,25 +405,32 @@ const handleProjectEditSubmit = async (e) => {
                   ))}
                 </div>
               </section>
-
               <section className="tasks-section">
                 <h2>Tareas Recientes</h2>
                 <div className="tasks-list">
                   {tasks && tasks.length > 0 ? (
                     tasks.slice(0, 5).map(task => (
                       <div key={task.task_id} className="task-card">
-                        <div className="task-header">
-                          <h4>{task.title}</h4>
-                          <span className={`status ${task.status}`}>
-                            {task.status}
-                          </span>
+                        {/* Contenido clickeable */}
+                        <div 
+                          className="task-content"
+                          onClick={() => navigate(`/task/${task.task_id}`)}
+                          style={{ cursor: 'pointer' }}>
+                          <div className="task-header">
+                            <h4>{task.title}</h4>
+                            <span className={`status ${task.status}`}>
+                              {task.status}
+                            </span>
+                          </div>
+                          <p>{task.description}</p>
+                          <div className="task-footer">
+                            <span>Vence: {new Date(task.due_date).toLocaleDateString()}</span>
+                            <span>Proyecto: {task.project_title || 'Sin proyecto'}</span>
+                          </div>
                         </div>
-                        <p>{task.description}</p>
-                        <div className="task-footer">
-                          <span>Vence: {new Date(task.due_date).toLocaleDateString()}</span>
-                          <span>Proyecto: {task.project_title || 'Sin proyecto'}</span>
-                        </div>
-                        <div className="task-actions">
+
+                        {/* Botones de acción (no clickeables) */}
+                        <div className="task-actions" onClick={e => e.stopPropagation()}>
                           <button onClick={() => handleEditTask(task.task_id)}>
                             Editar
                           </button>
@@ -431,52 +438,14 @@ const handleProjectEditSubmit = async (e) => {
                             Eliminar
                           </button>
                         </div>
-                        {editTask && (
-                          <div className="edit-task-form">
-                            <h3>Editar Tarea</h3>
-                            <form onSubmit={handleTaskEditSubmit}>
-                              <input
-                                type="text"
-                                value={editedTaskData.title}
-                                onChange={(e) => setEditedTaskData({ ...editedTaskData, title: e.target.value })}
-                                placeholder="Título"
-                                required
-                              />
-                              <textarea
-                                value={editedTaskData.description}
-                                onChange={(e) => setEditedTaskData({ ...editedTaskData, description: e.target.value })}
-                                placeholder="Descripción"
-                                required
-                              />
-                              <select
-                                value={editedTaskData.status}
-                                onChange={(e) => setEditedTaskData({ ...editedTaskData, status: e.target.value })}
-                                required
-                              >
-                                <option value="">Seleccione un estado</option>
-                                <option value="todo">Por hacer</option>
-                                <option value="in_progress">En progreso</option>
-                                <option value="review">En revisión</option>
-                                <option value="done">Completado</option>
-                              </select>
 
-                              <input
-                                type="date"
-                                value={editedTaskData.due_date}
-                                onChange={(e) => setEditedTaskData({ ...editedTaskData, due_date: e.target.value })}
-                                required
-                              />
-                              <button type="submit">Guardar cambios</button>
-                              <button type="button" onClick={() => setEditTask(null)}>
-                                Cancelar
-                              </button>
-                            </form>
+                        {editTask === task.task_id && (
+                          <div className="edit-task-form">
+                            {/* ... (mantén el formulario de edición igual) */}
                           </div>
                         )}
-
                       </div>
                     ))
-                    
                   ) : (
                     <div className="no-tasks-message">
                       No hay tareas recientes

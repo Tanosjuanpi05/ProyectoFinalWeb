@@ -186,7 +186,6 @@ const ProjectView = () => {
               <h2>Detalles del Proyecto</h2>
               <p>{project.description}</p>
               <div className="project-meta">
-                <span>Creado por: {project.owner_name}</span>
                 <span>Miembros: {members.length}</span>
               </div>
             </div>
@@ -236,7 +235,6 @@ const ProjectView = () => {
                     <p>{task.description}</p>
                     <div className="task-footer">
                       <span>Vence: {new Date(task.due_date).toLocaleDateString()}</span>
-                      <span>Asignado a: {task.assigned_to_name || 'Sin asignar'}</span>
                     </div>
                   </div>
                 ))}

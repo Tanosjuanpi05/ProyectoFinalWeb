@@ -147,10 +147,11 @@ class TaskResponse(TaskBase):
     task_id: int
     project_id: int
     assigned_to: Optional[int]
-    project_title: Optional[str] = None  # Añadir esta línea
+    project_title: Optional[str] = None
+    project_status: Optional[str] = None
 
     class Config:
-        from_attributes = True  # Mantener from_attributes que es el equivalente actualizado de orm_mode
+        from_attributes = True
 
 ### Project Schemas ###
 class ProjectBase(BaseModel):

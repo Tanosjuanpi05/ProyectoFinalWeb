@@ -1,13 +1,11 @@
-// src/components/Register.jsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Asegúrate que useNavigate esté importado
 import { userService } from '../services/api';
-import { useNavigate } from 'react-router-dom';
 import './Register.css';
 
 const Register = () => {
-  const navigate = useNavigate();
-  
+  const navigate = useNavigate(); // Hook para la navegación
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,10 +42,11 @@ const Register = () => {
         password: formData.password,
         role: formData.role
       };
-      
-      const response = await userService.createUser(userData);
-      setSuccess(true);
-      setFormData({
+
+      // Llama al servicio para crear el usuario
+      await userService.createUser(userData);
+      setSuccess(true); // Muestra mensaje de éxito
+      setFormData({ // Limpia el formulario
         name: '',
         email: '',
         password: '',
@@ -55,15 +54,17 @@ const Register = () => {
         role: 'user'
       });
 
+      // Redirige a la página de Login después de 2 segundos
       setTimeout(() => {
-        navigate('/home');
-      }, 2000);
+        navigate('/login'); // Cambiado de '/home' a '/login'
+      }, 2000); // Mantiene el delay para que el usuario vea el mensaje de éxito
 
     } catch (error) {
       setError(error.response?.data?.detail || 'Error al registrar usuario');
     }
   };
 
+  // ... resto del código del componente Register permanece igual
   return (
     <div className="register-container">
       <div className="register-card">
@@ -80,12 +81,13 @@ const Register = () => {
 
         {success && (
           <div className="success-message">
-            ¡Registro exitoso! Ya puedes iniciar sesión.
+            ¡Registro exitoso! Serás redirigido para iniciar sesión.
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="register-form">
-          <div className="form-group">
+          {/* ... campos del formulario ... */}
+           <div className="form-group">
             <label htmlFor="name">Nombre completo</label>
             <input
               type="text"
@@ -134,7 +136,7 @@ const Register = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="••••"
               required
             />
           </div>
@@ -147,7 +149,7 @@ const Register = () => {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="••••"
               required
             />
           </div>
@@ -157,8 +159,8 @@ const Register = () => {
           </button>
         </form>
         <p className="login-link">
-                ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
-            </p>
+          ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
+        </p>
       </div>
     </div>
   );
