@@ -170,13 +170,6 @@ ProyectoFinalWeb/
 - `PUT /api/tasks/{task_id}` - Actualizar tarea
 - `DELETE /api/tasks/{task_id}` - Eliminar tarea
 
-### Comentarios
-- `POST /api/comments/` - Crear comentario
-- `GET /api/comments/` - Obtener todos los comentarios
-- `GET /api/comments/{comment_id}` - Obtener comentario específico
-- `PUT /api/comments/{comment_id}` - Actualizar comentario
-- `DELETE /api/comments/{comment_id}` - Eliminar comentario
-
 ---
 
 ## Modelos de Datos
@@ -265,12 +258,6 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 Ejecuta el frontend en modo desarrollo:
 ```bash
 npm start
-```
-
-### Pruebas
-Ejecuta las pruebas del backend:
-```bash
-pytest
 ```
 
 ---
