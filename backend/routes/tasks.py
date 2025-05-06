@@ -125,7 +125,7 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.commit()
     return None
 
-@router.get("/project/{project_id}/tasks", response_model=List[schemas.TaskBase])
+@router.get("/project/{project_id}/tasks", response_model=List[schemas.TaskResponse])
 def get_project_tasks(
     project_id: int,
     status: str = None,
@@ -145,7 +145,24 @@ def get_project_tasks(
         query = query.filter(models.Task.status == status)
     
     tasks = query.all()
-    return tasks
+    
+    # Formatear la respuesta con toda la información necesaria
+    task_responses = []
+    for task in tasks:
+        task_response = {
+            "task_id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "status": task.status,
+            "due_date": task.due_date,
+            "project_id": task.project_id,
+            "assigned_to": task.assigned_to,
+            "project_title": project.title,
+            "project_status": project.status
+        }
+        task_responses.append(task_response)
+    
+    return task_responses
 
 @router.get("/user/{user_id}/tasks", response_model=List[schemas.TaskResponse])
 def get_user_tasks(
