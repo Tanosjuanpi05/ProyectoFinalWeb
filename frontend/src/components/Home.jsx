@@ -9,20 +9,20 @@ import NavBar from './NavBar';
 
 const Home = () => {
   const navigate = useNavigate();
-
-  // Estado para la información del usuario
-  const [userInfo, setUserInfo] = useState({
-    name: localStorage.getItem('userName') || 'Usuario',
-    id: localStorage.getItem('userId') || ''
-  });
-
-  const [editProject, setEditProject] = useState(null); // Estado para el proyecto que estamos editando
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [stats, setStats] = useState({ pendingTasks: 0, completedTasks: 0 });
+  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [editProject, setEditProject] = useState(null);
   const [editedProjectData, setEditedProjectData] = useState({
     title: '',
     description: '',
     status: ''
   });
-  const [editTask, setEditTask] = useState(null); // Estado para la tarea que estamos editando
+  const [editTask, setEditTask] = useState(null);
   const [editedTaskData, setEditedTaskData] = useState({
     title: '',
     description: '',
@@ -30,21 +30,12 @@ const Home = () => {
     due_date: '',
     assigned_to: ''
   });
-  const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showCreateProject, setShowCreateProject] = useState(false);
-  const [showCreateTask, setShowCreateTask] = useState(false);
-  const [stats, setStats] = useState({
-    pendingTasks: 0,
-    completedTasks: 0
-    
+  const [userInfo, setUserInfo] = useState({
+    id: localStorage.getItem('userId'),
+    name: localStorage.getItem('userName'),
+    email: localStorage.getItem('userEmail')
   });
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
   const [availableUsers, setAvailableUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -53,6 +44,17 @@ const Home = () => {
       return;
     }
     loadDashboardData();
+    
+    // Cargar lista de usuarios
+    const loadUsers = async () => {
+      try {
+        const users = await userService.getUsers();
+        setAvailableUsers(users);
+      } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+      }
+    };
+    loadUsers();
   }, [navigate]);
 
   const loadDashboardData = async () => {
@@ -251,17 +253,6 @@ const handleProjectEditSubmit = async (e) => {
       setError('Todos los campos son requeridos');
       return;
     }
-
-    // Llamar al servicio de actualización
-    await projectService.updateProject(editProject, editedProjectData);
-
-    // Actualizar el estado local
-    setProjects(prevProjects => prevProjects.map(project =>
-      project.project_id === editProject 
-        ? { ...project, ...editedProjectData }
-        : project
-    ));
-
     // Limpiar el estado de edición y errores
     setEditProject(null);
     setEditedProjectData({
@@ -367,7 +358,7 @@ const handleProjectEditSubmit = async (e) => {
                         Eliminar
                       </button>
                     </div> )}
-                      {editProject && (
+                      {editProject === project.project_id && (
                        <div className="edit-project-form">
                           <h3>Editar Proyecto</h3>
                           <form onSubmit={handleProjectEditSubmit}>
@@ -401,8 +392,7 @@ const handleProjectEditSubmit = async (e) => {
                         </div>
                       )}
                     </div>
-                    
-                  ))}
+                ))}
                 </div>
               </section>
               <section className="tasks-section">
@@ -411,7 +401,6 @@ const handleProjectEditSubmit = async (e) => {
                   {tasks && tasks.length > 0 ? (
                     tasks.slice(0, 5).map(task => (
                       <div key={task.task_id} className="task-card">
-                        {/* Contenido clickeable */}
                         <div 
                           className="task-content"
                           onClick={() => navigate(`/task/${task.task_id}`)}
@@ -426,10 +415,10 @@ const handleProjectEditSubmit = async (e) => {
                           <div className="task-footer">
                             <span>Vence: {new Date(task.due_date).toLocaleDateString()}</span>
                             <span>Proyecto: {task.project_title || 'Sin proyecto'}</span>
+                            <span>Asignada a: {availableUsers.find(u => u.user_id === task.assigned_to)?.name || 'Sin asignar'}</span>
                           </div>
                         </div>
 
-                        {/* Botones de acción (no clickeables) */}
                         <div className="task-actions" onClick={e => e.stopPropagation()}>
                           <button onClick={() => handleEditTask(task.task_id)}>
                             Editar
@@ -441,7 +430,68 @@ const handleProjectEditSubmit = async (e) => {
 
                         {editTask === task.task_id && (
                           <div className="edit-task-form">
-                            {/* ... (mantén el formulario de edición igual) */}
+                            <h3>Editar Tarea</h3>
+                            {error && <div className="error-message">{error}</div>}
+                            <form onSubmit={handleTaskEditSubmit}>
+                              <div className="form-group">
+                                <label htmlFor="title">Título</label>
+                                <input
+                                  type="text"
+                                  id="title"
+                                  value={editedTaskData.title}
+                                  onChange={(e) => setEditedTaskData({ ...editedTaskData, title: e.target.value })}
+                                  placeholder="Título de la tarea"
+                                  required
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label htmlFor="description">Descripción</label>
+                                <textarea
+                                  id="description"
+                                  value={editedTaskData.description}
+                                  onChange={(e) => setEditedTaskData({ ...editedTaskData, description: e.target.value })}
+                                  placeholder="Descripción de la tarea"
+                                  rows="4"
+                                  required
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label htmlFor="status">Estado</label>
+                                <select
+                                  id="status"
+                                  value={editedTaskData.status}
+                                  onChange={(e) => setEditedTaskData({ ...editedTaskData, status: e.target.value })}
+                                  required
+                                >
+                                  <option value="todo">Por hacer</option>
+                                  <option value="in_progress">En progreso</option>
+                                  <option value="review">En revisión</option>
+                                  <option value="done">Completado</option>
+                                </select>
+                              </div>
+
+                              <div className="form-group">
+                                <label htmlFor="due_date">Fecha de vencimiento</label>
+                                <input
+                                  type="date"
+                                  id="due_date"
+                                  value={editedTaskData.due_date}
+                                  onChange={(e) => setEditedTaskData({ ...editedTaskData, due_date: e.target.value })}
+                                  required
+                                />
+                              </div>
+
+                              <div className="form-actions">
+                                <button type="button" className="cancel-button" onClick={() => setEditTask(null)}>
+                                  Cancelar
+                                </button>
+                                <button type="submit" className="submit-button">
+                                  Guardar cambios
+                                </button>
+                              </div>
+                            </form>
                           </div>
                         )}
                       </div>

@@ -1,4 +1,3 @@
-
 import axios from 'axios';	
 
 const BASE_URL = "http://localhost:8000/api";
@@ -386,15 +385,21 @@ const membershipService = {
     // Obtener una tarea específica
     getTaskById: async (taskId) => {
       try {
-        // Agregar parámetro para incluir información relacionada
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No hay token de autenticación');
+        }
+
+        console.log('Obteniendo tarea:', taskId);
         const response = await axios.get(`${BASE_URL}/tasks/${taskId}`, {
-          params: {
-            include_project: true,
-            include_assigned: true
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
         });
+        console.log('Respuesta de tarea:', response.data);
         return response.data;
       } catch (error) {
+        console.error('Error en getTaskById:', error);
         throw error;
       }
     },
@@ -432,13 +437,23 @@ updateTask: async (taskId, updateData) => {
     },
   
     // Obtener tareas de un proyecto específico
-    getProjectTasks: async (projectId, status = null) => {
+    getProjectTasks: async (projectId) => {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No hay token de autenticación');
+        }
+
+        console.log('Obteniendo tareas del proyecto:', projectId);
         const response = await axios.get(`${BASE_URL}/tasks/project/${projectId}/tasks`, {
-          params: { status }
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
+        console.log('Respuesta de tareas del proyecto:', response.data);
         return response.data;
       } catch (error) {
+        console.error('Error en getProjectTasks:', error);
         throw error;
       }
     },

@@ -61,9 +61,17 @@
   color: white;
 }
 
+.edit-button:hover {
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+}
+
 .delete-button {
   background: linear-gradient(135deg, #f56565, #c53030);
   color: white;
+}
+
+.delete-button:hover {
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
 }
 
 .task-details {
@@ -94,20 +102,121 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.edit-task-form input,
-.edit-task-form textarea,
-.edit-task-form select {
+.edit-task-form h3 {
+  color: #2d3748;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 10px;
-  margin-bottom: 15px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
+  font-size: 1rem;
+  color: #2d3748;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
 }
 
 .form-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.cancel-button {
+  padding: 8px 16px;
+  background-color: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-button {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background-color: #cbd5e0;
+}
+
+.submit-button:hover {
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+}
+
+.error-message {
+  background-color: #fff5f5;
+  color: #c53030;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #f56565;
+}
+
+.status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.status.todo {
+  background-color: #ebf8ff;
+  color: #3182ce;
+}
+
+.status.in_progress {
+  background-color: #faf5ff;
+  color: #6b46c1;
+}
+
+.status.review {
+  background-color: #fffaf0;
+  color: #d69e2e;
+}
+
+.status.done {
+  background-color: #f0fff4;
+  color: #38a169;
 }
 
 .task-project {
@@ -123,17 +232,72 @@
   border-radius: 8px;
   margin-top: 15px;
   border-left: 4px solid #4299e1;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.project-info-card:hover {
+  transform: translateY(-2px);
 }
 
 .project-status {
   display: inline-block;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
   background: #e2e8f0;
   color: #4a5568;
   margin-top: 8px;
+}
+
+.click-hint {
+  color: #718096;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+.assignment-info {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #4299e1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignment-info h3 {
+  color: #2d3748;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.assigned-to {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  color: #4a5568;
+}
+
+.assigned-to strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.assigned-email {
+  color: #718096;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
+.not-assigned {
+  color: #718096;
+  font-style: italic;
+  padding-left: 4px;
 }
 
 @media (max-width: 768px) {
@@ -144,10 +308,19 @@
   .task-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 15px;
   }
 
   .task-meta {
     flex-direction: column;
     gap: 10px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
   }
 }

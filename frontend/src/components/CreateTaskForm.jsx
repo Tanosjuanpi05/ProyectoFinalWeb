@@ -1,6 +1,6 @@
 // src/components/CreateTaskForm.jsx
-import React, { useState } from 'react';
-import { taskService } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { taskService, userService, projectService } from '../services/api';
 import './CreateTaskForm.css';
 
 const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
@@ -10,11 +10,22 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
     status: 'todo',
     due_date: '',
     project_id: '',
-    assigned_to: null
+    assigned_to: ''
   });
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [projectMembers, setProjectMembers] = useState([]);
+
+  const loadProjectMembers = async (projectId) => {
+    try {
+      const projectData = await projectService.getProjectById(projectId);
+      setProjectMembers(projectData.members || []);
+    } catch (error) {
+      console.error('Error al cargar miembros del proyecto:', error);
+      setError('Error al cargar la lista de miembros');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,6 +33,11 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
       ...prevState,
       [name]: value
     }));
+
+    // Cargar miembros del proyecto cuando se selecciona un proyecto
+    if (name === 'project_id' && value) {
+      loadProjectMembers(value);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -30,18 +46,13 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
     setError('');
 
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        throw new Error('No se encontró el ID del usuario');
-      }
-
       const taskData = {
         title: formData.title,
         description: formData.description,
         project_id: parseInt(formData.project_id),
         status: formData.status,
         due_date: formData.due_date,
-        assigned_to: parseInt(userId)  // Asignar la tarea al usuario actual
+        assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : null
       };
 
       console.log('Enviando datos de tarea:', taskData);
@@ -144,6 +155,27 @@ const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {
               required
               min={new Date().toISOString().slice(0, 16)}
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="assigned_to">Asignar a</label>
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              value={formData.assigned_to}
+              onChange={handleChange}
+              disabled={!formData.project_id} // Deshabilitar si no hay proyecto seleccionado
+            >
+              <option value="">Sin asignar</option>
+              {projectMembers.map(member => (
+                <option key={member.user_id} value={member.user_id}>
+                  {member.name} ({member.email})
+                </option>
+              ))}
+            </select>
+            {!formData.project_id && 
+              <small className="helper-text">Seleccione un proyecto primero</small>
+            }
           </div>
 
           <div className="form-actions">

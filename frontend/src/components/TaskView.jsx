@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-// Asegúrate que projectService esté importado si lo necesitas para otras cosas,
-// pero para obtener el título/status del proyecto de la tarea, no lo usaremos aquí.
-import { taskService } from '../services/api';
+import { taskService, projectService } from '../services/api';
 import NavBar from './NavBar';
 import './TaskView.css';
 import { userService } from '../services/api';
@@ -16,69 +14,87 @@ const TaskView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [projectMembers, setProjectMembers] = useState([]);
 
   useEffect(() => {
-    // ... (obtener currentUser - sin cambios)
+    if (!taskId) {
+      setError('ID de tarea no válido');
+      setLoading(false);
+      return;
+    }
+
     const userId = localStorage.getItem('userId');
     const userName = localStorage.getItem('userName');
     const userEmail = localStorage.getItem('userEmail');
-
+    
     if (userId) {
-      const user = {
+      setCurrentUser({
         id: parseInt(userId),
         name: userName,
         email: userEmail
-      };
-      setCurrentUser(user);
+      });
     }
 
     loadTaskData();
   }, [taskId]);
 
   const loadTaskData = async () => {
+    if (!taskId) return;
+    
     try {
       setLoading(true);
       setError('');
-      const taskData = await taskService.getTaskById(taskId);
+      console.log('Cargando tarea con ID:', taskId);
       
-      console.log('Datos completos de la tarea:', taskData);
-  
-      // Si tenemos assigned_to, obtener el email del usuario
-      let assignedToEmail = 'Sin asignar';
-      if (taskData.assigned_to) {
+      const taskData = await taskService.getTaskById(taskId);
+      console.log('Datos de la tarea cargados:', taskData);
+      
+      if (!taskData) {
+        throw new Error('No se pudo cargar la tarea');
+      }
+
+      // Si la tarea pertenece a un proyecto, cargar la información del proyecto
+      if (taskData.project_id) {
         try {
-          const userData = await userService.getUserById(taskData.assigned_to);
-          assignedToEmail = userData.email;
-        } catch (userError) {
-          console.error('Error al obtener datos del usuario asignado:', userError);
-          assignedToEmail = 'Usuario no encontrado';
+          console.log('Cargando datos del proyecto:', taskData.project_id);
+          const projectData = await projectService.getProjectById(taskData.project_id);
+          console.log('Datos del proyecto cargados:', projectData);
+          setProjectMembers(projectData.members || []);
+        } catch (projectError) {
+          console.error('Error al cargar datos del proyecto:', projectError);
         }
       }
-  
-      setTask({
-        ...taskData,
-        assigned_to_email: assignedToEmail,
-        project_id: taskData.project_id,
-        project_title: taskData.project_title || 'Proyecto no encontrado',
-        project_status: taskData.project_status || 'desconocido'
+
+      setTask(taskData);
+      
+      // Preparar datos para edición si es necesario
+      setEditedTask({
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        due_date: taskData.due_date ? taskData.due_date.split('T')[0] : '',
+        assigned_to: taskData.assigned_to || null
       });
-  
-      // ... resto del código
+
     } catch (error) {
-      console.error('Error loading task:', error);
-      setError('Error al cargar la tarea. Verifica la consola.');
+      console.error('Error al cargar la tarea:', error);
+      setError('Error al cargar la tarea: ' + (error.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
   };
 
-  // ... (resto de las funciones handleEditSubmit, handleDeleteTask sin cambios)
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!editedTask.title || !editedTask.description || !editedTask.status) {
+        setError('Todos los campos son requeridos');
+        return;
+      }
+
       await taskService.updateTask(taskId, editedTask);
       setIsEditing(false);
-      loadTaskData(); // Recargar datos después de editar
+      loadTaskData();
     } catch (error) {
       setError('Error al actualizar la tarea');
     }
@@ -88,7 +104,6 @@ const TaskView = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
       try {
         await taskService.deleteTask(taskId);
-        // Idealmente, navegar al proyecto o a home
         if (task?.project_id) {
           navigate(`/project/${task.project_id}`);
         } else {
@@ -100,19 +115,14 @@ const TaskView = () => {
     }
   };
 
-
   if (loading) return <div className="loading-spinner">Cargando...</div>;
-  // Mostrar error específico si existe
   if (error) return <div className="error-message">{error}</div>;
-  // Si no hay tarea después de cargar y sin error, mostrar mensaje
-  if (!task) return <div className="error-message">Tarea no encontrada o no se pudo cargar.</div>;
+  if (!task) return <div className="error-message">Tarea no encontrada</div>;
 
-  // --- Renderizado ---
   return (
     <div className="task-view">
       <NavBar />
       <div className="task-view-content">
-        {/* ... (Header sin cambios) ... */}
         <header className="task-header">
           <button className="back-button" onClick={() => navigate(-1)}>
             ← Volver
@@ -120,82 +130,135 @@ const TaskView = () => {
           <div className="task-title-section">
             <h1>{task.title}</h1>
             <span className={`status ${task.status}`}>
-              {task.status}
+              {task.status === 'todo' ? 'Por hacer' :
+               task.status === 'in_progress' ? 'En progreso' :
+               task.status === 'review' ? 'En revisión' :
+               task.status === 'done' ? 'Completado' : task.status}
             </span>
           </div>
-          {/* Verifica que task.created_by exista antes de comparar */}
           {currentUser && task.created_by && parseInt(currentUser.id) === parseInt(task.created_by) && (
             <div className="task-actions">
               <button onClick={() => setIsEditing(true)} className="edit-button">
                 Editar
               </button>
               <button onClick={handleDeleteTask} className="delete-button">
-                Eliminar Tarea
+                Eliminar
               </button>
             </div>
           )}
         </header>
 
         {isEditing ? (
-          // ... (Formulario de edición sin cambios) ...
           <div className="edit-task-form">
             <h3>Editar Tarea</h3>
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleEditSubmit}>
-              <input
-                type="text"
-                value={editedTask.title}
-                onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-                placeholder="Título"
-              />
-              <textarea
-                value={editedTask.description}
-                onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                placeholder="Descripción"
-              />
-              <select
-                value={editedTask.status}
-                onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
-              >
-                <option value="todo">Por hacer</option>
-                <option value="in_progress">En progreso</option>
-                <option value="review">En revisión</option>
-                <option value="done">Completado</option>
-              </select>
-              <input
-                type="date"
-                value={editedTask.due_date}
-                onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
-              />
-              {/* Aquí podrías añadir un selector para 'assigned_to' si es necesario */}
+              <div className="form-group">
+                <label htmlFor="title">Título</label>
+                <input
+                  type="text"
+                  id="title"
+                  value={editedTask.title}
+                  onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                  placeholder="Título de la tarea"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="description">Descripción</label>
+                <textarea
+                  id="description"
+                  value={editedTask.description}
+                  onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                  placeholder="Descripción de la tarea"
+                  rows="4"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="status">Estado</label>
+                <select
+                  id="status"
+                  value={editedTask.status}
+                  onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
+                >
+                  <option value="todo">Por hacer</option>
+                  <option value="in_progress">En progreso</option>
+                  <option value="review">En revisión</option>
+                  <option value="done">Completado</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="due_date">Fecha de vencimiento</label>
+                <input
+                  type="date"
+                  id="due_date"
+                  value={editedTask.due_date}
+                  onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="assigned_to">Asignar a</label>
+                <select
+                  id="assigned_to"
+                  value={editedTask.assigned_to || ''}
+                  onChange={(e) => setEditedTask({ ...editedTask, assigned_to: e.target.value ? parseInt(e.target.value) : null })}
+                >
+                  <option value="">Sin asignar</option>
+                  {projectMembers.map(member => (
+                    <option key={member.user_id} value={member.user_id}>
+                      {member.name} ({member.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="form-actions">
-                <button type="submit">Guardar</button>
-                <button type="button" onClick={() => setIsEditing(false)}>Cancelar</button>
+                <button type="button" className="cancel-button" onClick={() => setIsEditing(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="submit-button">
+                  Guardar cambios
+                </button>
               </div>
             </form>
           </div>
         ) : (
           <div className="task-details">
-            {/* ... (Detalles de la tarea sin cambios) ... */}
             <div className="task-info">
               <h2>Detalles de la Tarea</h2>
               <p>{task.description || 'Sin descripción.'}</p>
               <div className="task-meta">
-                {/* Verifica que due_date sea una fecha válida */}
                 <span>Fecha límite: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No definida'}</span>
+                <div className="assignment-info">
+                  <h3>Asignación</h3>
+                  <p className="assigned-to">
+                    {task.assigned_to ? (
+                      <>
+                        <strong>Asignada a: </strong> 
+                        {projectMembers.find(m => m.user_id === task.assigned_to)?.name || 'Usuario no encontrado'}
+                        <span className="assigned-email">
+                          ({projectMembers.find(m => m.user_id === task.assigned_to)?.email})
+                        </span>
+                      </>
+                    ) : (
+                      <span className="not-assigned">Sin asignar</span>
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Sección del Proyecto Relacionado */}
-            {task.project_id && ( // Solo muestra si hay un ID de proyecto
+            {task.project_id && (
               <div className="task-project">
                 <h2>Proyecto Relacionado</h2>
-                {/* Hacer clickeable si hay ID */}
                 <div
                   className="project-info-card"
                   onClick={() => task.project_id && navigate(`/project/${task.project_id}`)}
                   style={{ cursor: task.project_id ? 'pointer' : 'default' }}
                 >
-                  {/* Muestra el título y status obtenidos */}
                   <h3>{task.project_title}</h3>
                   <span className={`project-status ${task.project_status}`}>
                     {task.project_status}

@@ -41,14 +41,23 @@ const ProjectView = () => {
   const loadProjectData = async () => {
     try {
       setLoading(true);
-      const projectData = await projectService.getProjectById(projectId);
-      const projectTasks = await taskService.getProjectTasks(projectId);
+      setError('');
       
+      const projectData = await projectService.getProjectById(projectId);
       console.log('Datos del proyecto:', projectData);
       
+      const projectTasks = await taskService.getProjectTasks(projectId);
+      console.log('Tareas del proyecto:', projectTasks);
+      
+      if (!projectTasks) {
+        console.error('No se pudieron cargar las tareas');
+        setTasks([]);
+      } else {
+        setTasks(projectTasks);
+      }
+      
       setProject(projectData);
-      setTasks(projectTasks);
-      setMembers(projectData.members); // Usar los miembros del proyecto directamente
+      setMembers(projectData.members || []);
       setEditedProject({
         title: projectData.title,
         description: projectData.description,
@@ -61,7 +70,6 @@ const ProjectView = () => {
       setLoading(false);
     }
   };
-  
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -225,16 +233,41 @@ const ProjectView = () => {
               <h2>Tareas del Proyecto</h2>
               <div className="tasks-grid">
                 {tasks.map(task => (
-                  <div key={task.task_id} className="task-card">
+                  <div 
+                    className="task-card"
+                    key={task.task_id} 
+                    onClick={() => navigate(`/task/${task.task_id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="task-header">
                       <h3>{task.title}</h3>
                       <span className={`status ${task.status}`}>
-                        {task.status}
+                        {task.status === 'todo' ? 'Por hacer' :
+                         task.status === 'in_progress' ? 'En progreso' :
+                         task.status === 'review' ? 'En revisión' :
+                         task.status === 'done' ? 'Completado' : task.status}
                       </span>
                     </div>
                     <p>{task.description}</p>
                     <div className="task-footer">
-                      <span>Vence: {new Date(task.due_date).toLocaleDateString()}</span>
+                      <span className="task-due-date">
+                        <i className="far fa-calendar"></i> 
+                        Vence: {new Date(task.due_date).toLocaleDateString()}
+                      </span>
+                      <span className="task-assignee">
+                        <i className="far fa-user"></i>
+                        {task.assigned_to ? (
+                          <>
+                            <strong>Asignada a: </strong>
+                            {members.find(m => m.user_id === task.assigned_to)?.name}
+                            <span className="assignee-email">
+                              ({members.find(m => m.user_id === task.assigned_to)?.email})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="not-assigned">Sin asignar</span>
+                        )}
+                      </span>
                     </div>
                   </div>
                 ))}
