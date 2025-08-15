@@ -1,10 +1,8 @@
 // src/components/NavBar.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './NavBar.css';
 
 const NavBar = () => {
-  const navigate = useNavigate();
   const [dateTime, setDateTime] = useState(new Date());
 
   useEffect(() => {

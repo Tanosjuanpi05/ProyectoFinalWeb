@@ -1,6 +1,6 @@
 // src/components/CreateTaskForm.jsx
-import React, { useState, useEffect } from 'react';
-import { taskService, userService, projectService } from '../services/api';
+import React, { useState } from 'react';
+import { taskService, projectService } from '../services/api';
 import './CreateTaskForm.css';
 
 const CreateTaskForm = ({ onClose, onTaskCreated, projects }) => {

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { taskService, projectService } from '../services/api';
 import NavBar from './NavBar';
 import './TaskView.css';
-import { userService } from '../services/api';
 
 const TaskView = () => {
   const { taskId } = useParams();
@@ -16,29 +15,7 @@ const TaskView = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [projectMembers, setProjectMembers] = useState([]);
 
-  useEffect(() => {
-    if (!taskId) {
-      setError('ID de tarea no válido');
-      setLoading(false);
-      return;
-    }
-
-    const userId = localStorage.getItem('userId');
-    const userName = localStorage.getItem('userName');
-    const userEmail = localStorage.getItem('userEmail');
-    
-    if (userId) {
-      setCurrentUser({
-        id: parseInt(userId),
-        name: userName,
-        email: userEmail
-      });
-    }
-
-    loadTaskData();
-  }, [taskId]);
-
-  const loadTaskData = async () => {
+  const loadTaskData = useCallback(async () => {
     if (!taskId) return;
     
     try {
@@ -82,7 +59,29 @@ const TaskView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [taskId]);
+
+  useEffect(() => {
+    if (!taskId) {
+      setError('ID de tarea no válido');
+      setLoading(false);
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    const userEmail = localStorage.getItem('userEmail');
+    
+    if (userId) {
+      setCurrentUser({
+        id: parseInt(userId),
+        name: userName,
+        email: userEmail
+      });
+    }
+
+    loadTaskData();
+  }, [taskId, loadTaskData]);
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();

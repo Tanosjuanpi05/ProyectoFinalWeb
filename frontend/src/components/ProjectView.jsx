@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectService, taskService, userService, membershipService } from '../services/api';
 import NavBar from './NavBar';
@@ -19,26 +19,7 @@ const ProjectView = () => {
   const [selectedUser, setSelectedUser] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
-  useEffect(() => {
-    // Obtener los datos del usuario del localStorage como se guardan en Login
-    const userId = localStorage.getItem('userId');
-    const userName = localStorage.getItem('userName');
-    const userEmail = localStorage.getItem('userEmail');
-  
-    if (userId) {
-      const user = {
-        id: parseInt(userId),
-        name: userName,
-        email: userEmail
-      };
-      console.log('Usuario recuperado:', user);
-      setCurrentUser(user);
-    }
-    
-    loadProjectData();
-  }, [projectId]);
-
-  const loadProjectData = async () => {
+  const loadProjectData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -64,12 +45,31 @@ const ProjectView = () => {
         status: projectData.status
       });
     } catch (error) {
-      console.error('Error loading project:', error);
+      console.error('Error al cargar datos del proyecto:', error);
       setError('Error al cargar el proyecto');
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    // Obtener los datos del usuario del localStorage como se guardan en Login
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    const userEmail = localStorage.getItem('userEmail');
+  
+    if (userId) {
+      const user = {
+        id: parseInt(userId),
+        name: userName,
+        email: userEmail
+      };
+      console.log('Usuario recuperado:', user);
+      setCurrentUser(user);
+    }
+    
+    loadProjectData();
+  }, [projectId, loadProjectData]);
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();

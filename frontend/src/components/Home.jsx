@@ -1,6 +1,6 @@
 // src/components/Home.jsx
-import React, { useState, useEffect } from 'react';
-import { projectService, taskService, userService, membershipService } from '../services/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { projectService, taskService, userService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import CreateProjectForm from './CreateProjectForm';
 import CreateTaskForm from './CreateTaskForm';
@@ -30,34 +30,14 @@ const Home = () => {
     due_date: '',
     assigned_to: ''
   });
-  const [userInfo, setUserInfo] = useState({
+  const [userInfo] = useState({
     id: localStorage.getItem('userId'),
     name: localStorage.getItem('userName'),
     email: localStorage.getItem('userEmail')
   });
   const [availableUsers, setAvailableUsers] = useState([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    loadDashboardData();
-    
-    // Cargar lista de usuarios
-    const loadUsers = async () => {
-      try {
-        const users = await userService.getUsers();
-        setAvailableUsers(users);
-      } catch (error) {
-        console.error('Error al cargar usuarios:', error);
-      }
-    };
-    loadUsers();
-  }, [navigate]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -109,7 +89,27 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    loadDashboardData();
+    
+    // Cargar lista de usuarios
+    const loadUsers = async () => {
+      try {
+        const users = await userService.getUsers();
+        setAvailableUsers(users);
+      } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+      }
+    };
+    loadUsers();
+  }, [navigate, loadDashboardData]);
 
   const handleProjectCreated = (newProject) => {
     setProjects(prevProjects => [newProject, ...prevProjects]);
